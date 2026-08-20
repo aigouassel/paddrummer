@@ -27,6 +27,13 @@ export function InputPanel({
   onUseKeyboard,
   onUseMicrophone,
   onSensitivity,
+  metronome,
+  onMetronome,
+  calibrating,
+  calibrationTaps,
+  onCalibrate,
+  latencyMs,
+  onClearLatency,
 }: {
   input: InputKind
   micStatus: MicStatus
@@ -36,6 +43,13 @@ export function InputPanel({
   onUseKeyboard: () => void
   onUseMicrophone: () => void
   onSensitivity: (value: number) => void
+  metronome: boolean
+  onMetronome: (on: boolean) => void
+  calibrating: boolean
+  calibrationTaps: number
+  onCalibrate: () => void
+  latencyMs: number
+  onClearLatency: () => void
 }) {
   const levelRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLDivElement>(null)
@@ -59,7 +73,9 @@ export function InputPanel({
   }, [listening, getMeter, sensitivity])
 
   return (
-    <section className="input-panel">
+    <section className="panel-stack">
+      <p className="eyebrow">Input</p>
+
       <div className="segmented" role="group" aria-label="Input source">
         <button
           type="button"
@@ -117,6 +133,38 @@ export function InputPanel({
             </>
           ) : null}
         </div>
+      )}
+
+      <hr />
+
+      <p className="eyebrow">Metronome &amp; timing</p>
+
+      <label className="toggle">
+        <input
+          type="checkbox"
+          checked={metronome}
+          onChange={(event) => onMetronome(event.target.checked)}
+        />
+        <span>Click on every beat</span>
+      </label>
+
+      <button type="button" className="ghost wide" onClick={onCalibrate}>
+        {calibrating ? `Tap along… ${calibrationTaps}/8` : 'Calibrate latency'}
+      </button>
+
+      {latencyMs !== 0 && !calibrating ? (
+        <p className="note">
+          Correcting by {latencyMs > 0 ? '+' : ''}
+          {latencyMs}ms.{' '}
+          <button type="button" className="link" onClick={onClearLatency}>
+            Reset
+          </button>
+        </p>
+      ) : (
+        <p className="note">
+          Measures the delay between a note sounding and the app seeing your strike. Run it once
+          per setup.
+        </p>
       )}
     </section>
   )

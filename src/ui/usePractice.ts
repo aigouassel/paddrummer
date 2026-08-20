@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { PracticeEngine } from '../audio/engine'
 import { fullCycle, type Rudiment } from '../domain/pattern'
 import type { ScoreReport } from '../domain/scoring'
@@ -28,13 +28,16 @@ export function usePractice(rudiment: Rudiment) {
   const [activeStroke, setActiveStroke] = useState(-1)
   const [report, setReport] = useState<ScoreReport | null>(null)
 
-  const strokes = fullCycle(rudiment)
+  // Memoised because identity matters downstream: Score re-engraves the whole
+  // stave whenever this array changes, and a fresh array every render would
+  // mean a full VexFlow layout pass on every score update.
+  const strokes = useMemo(() => fullCycle(rudiment), [rudiment])
 
   useEffect(() => {
-    engine.setPattern(fullCycle(rudiment))
+    engine.setPattern(strokes)
     setActiveStroke(-1)
     setReport(null)
-  }, [engine, rudiment])
+  }, [engine, strokes])
 
   useEffect(() => {
     // Timing bugs are invisible in a screenshot, so expose the engine in dev:

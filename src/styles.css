@@ -22,107 +22,82 @@
   }
 }
 
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
-  padding: 2rem 1.25rem 4rem;
   background: var(--bg);
   color: var(--fg);
+  /* The app owns the viewport: columns scroll, the page does not. */
+  overflow: hidden;
 }
 
-.app { max-width: 46rem; margin: 0 auto; }
-
-h1 { margin: 0; font-size: 1.9rem; letter-spacing: -0.02em; }
-.subtitle { margin: 0.25rem 0 2rem; color: var(--muted); }
-
-.panel {
+/* ── Layout ─────────────────────────────────────────────────────────
+   dvh rather than vh: on mobile, vh is sized to the viewport with the
+   browser chrome *hidden*, so a 100vh app is taller than the screen and
+   the bottom of the right-hand column sits under the toolbar. */
+.layout {
   display: grid;
-  gap: 1.1rem;
-  padding: 1.25rem;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 0.75rem;
+  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr) minmax(16rem, 21rem);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'top top top'
+    'left center right';
+  height: 100dvh;
 }
 
-.field { display: grid; gap: 0.4rem; font-size: 0.9rem; }
-.field > span { color: var(--muted); }
-.field strong { color: var(--fg); font-variant-numeric: tabular-nums; }
-
-select, input[type='range'] { width: 100%; }
-
-select {
-  padding: 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: 0.4rem;
-  background: var(--bg);
-  color: var(--fg);
-  font: inherit;
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  padding: 0.9rem 1.5rem;
+  border-bottom: 1px solid var(--line);
 }
 
-.controls { display: flex; align-items: center; gap: 1rem; }
+.topbar h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; }
+.topbar p { margin: 0; color: var(--muted); font-size: 0.85rem; }
 
-.play {
-  padding: 0.55rem 1.6rem;
-  border: none;
-  border-radius: 0.4rem;
-  background: var(--accent);
-  color: #fff;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-.play:hover { filter: brightness(1.08); }
-
-.toggle { display: flex; align-items: center; gap: 0.4rem; color: var(--muted); font-size: 0.9rem; }
-
-.score {
-  margin: 2rem 0 0;
-  overflow-x: auto;
+.col {
+  padding: 1.5rem;
+  overflow-y: auto;
+  min-width: 0;
 }
 
-/*
- * VexFlow hard-codes fill="black" stroke="black" on the root <svg>, and every
- * child inherits rather than carrying its own colour. CSS outranks a
- * presentation attribute, so recolouring the whole score — and the playhead —
- * is two rules and no re-render.
- */
-.score svg {
-  fill: var(--fg);
-  stroke: var(--fg);
+.col-left { grid-area: left; border-right: 1px solid var(--line); }
+.col-right { grid-area: right; border-left: 1px solid var(--line); }
+
+.col-center {
+  grid-area: center;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 1.5rem;
 }
 
-.score .is-active {
-  fill: var(--accent);
-  stroke: var(--accent);
+/* The stave sits in the optical centre of the column it owns. */
+.stage {
+  display: grid;
+  align-content: center;
+  min-height: 0;
 }
 
-.score .is-active path,
-.score .is-active rect,
-.score .is-active text {
-  transition: fill 70ms linear, stroke 70ms linear;
-}
+.panel-stack { display: grid; gap: 1rem; align-content: start; }
 
-.note { margin-top: 1.5rem; font-size: 0.875rem; color: var(--muted); }
-
-.ghost {
-  padding: 0.4rem 0.85rem;
-  border: 1px solid var(--line);
-  border-radius: 0.4rem;
-  background: transparent;
+/* ── Type ───────────────────────────────────────────────────────── */
+.eyebrow {
+  margin: 0;
   color: var(--muted);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
-.ghost:hover { color: var(--fg); border-color: var(--muted); }
 
-.play:disabled { opacity: 0.45; cursor: not-allowed; }
+.note { margin: 0; font-size: 0.85rem; color: var(--muted); }
 
-.hint {
-  margin-top: 1.75rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  max-width: 34rem;
-}
+.hint { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.hint.centered { text-align: center; max-width: 34rem; justify-self: center; }
+
+hr { width: 100%; height: 1px; margin: 0.5rem 0; border: 0; background: var(--line); }
 
 kbd {
   padding: 0.1rem 0.4rem;
@@ -135,47 +110,98 @@ kbd {
   font-size: 0.8rem;
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1rem;
-  margin: 1.75rem 0 0;
-  padding: 1rem 1.25rem;
+/* ── Controls ───────────────────────────────────────────────────── */
+.field { display: grid; gap: 0.4rem; font-size: 0.85rem; }
+.field > span { color: var(--muted); }
+.field strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+select, input[type='range'] { width: 100%; }
+
+select {
+  padding: 0.5rem;
   border: 1px solid var(--line);
-  border-radius: 0.75rem;
+  border-radius: 0.4rem;
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+}
+
+.rudiment-card {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
   background: var(--card);
 }
 
-.stats dt {
+.rudiment-card h2 { margin: 0; font-size: 1.15rem; letter-spacing: -0.01em; }
+
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.play {
+  padding: 0.6rem 2rem;
+  border: none;
+  border-radius: 0.4rem;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.play:hover { filter: brightness(1.08); }
+.play:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.tempo { display: grid; gap: 0.3rem; width: min(22rem, 100%); }
+.tempo-value { color: var(--muted); font-size: 0.85rem; text-align: center; }
+.tempo-value strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   color: var(--muted);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 0.85rem;
 }
 
-.stats dd {
-  margin: 0.2rem 0 0;
-  font-size: 1.25rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.stats .qualifier {
-  display: block;
-  font-size: 0.75rem;
+.ghost {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: transparent;
   color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
 }
+.ghost:hover { color: var(--fg); border-color: var(--muted); }
+.ghost.wide { width: 100%; }
 
-.input-panel { margin-top: 2rem; }
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
 
 .segmented {
-  display: inline-flex;
+  display: flex;
   border: 1px solid var(--line);
   border-radius: 0.45rem;
   overflow: hidden;
 }
 
 .segmented button {
-  padding: 0.4rem 1rem;
+  flex: 1;
+  padding: 0.45rem 0.75rem;
   border: none;
   background: transparent;
   color: var(--muted);
@@ -186,6 +212,25 @@ kbd {
 .segmented button.is-selected { background: var(--accent); color: #fff; }
 .segmented button:not(.is-selected):hover { color: var(--fg); }
 
+/* ── Notation ───────────────────────────────────────────────────── */
+.score { overflow-x: auto; }
+
+/*
+ * VexFlow hard-codes fill="black" stroke="black" on the root <svg>, and every
+ * child inherits rather than carrying its own colour. CSS outranks a
+ * presentation attribute, so recolouring the whole score — and the playhead —
+ * is two rules and no re-render.
+ */
+.score svg { fill: var(--fg); stroke: var(--fg); }
+.score .is-active { fill: var(--accent); stroke: var(--accent); }
+
+.score .is-active path,
+.score .is-active rect,
+.score .is-active text {
+  transition: fill 70ms linear, stroke 70ms linear;
+}
+
+/* ── Microphone ─────────────────────────────────────────────────── */
 .mic { display: grid; gap: 0.9rem; }
 
 .meter {
@@ -197,11 +242,7 @@ kbd {
   overflow: hidden;
 }
 
-.meter-level {
-  height: 100%;
-  width: 0;
-  background: var(--accent);
-}
+.meter-level { height: 100%; width: 0; background: var(--accent); }
 
 .meter-trigger {
   position: absolute;
@@ -210,4 +251,47 @@ kbd {
   width: 2px;
   background: var(--fg);
   opacity: 0.6;
+}
+
+/* ── Score read-out ─────────────────────────────────────────────── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.stats dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats .qualifier { display: block; font-size: 0.75rem; color: var(--muted); }
+
+/* ── Narrow screens ─────────────────────────────────────────────── */
+@media (max-width: 60rem) {
+  body { overflow: auto; }
+
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'top' 'center' 'left' 'right';
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .col { overflow: visible; }
+  .col-left, .col-right { border: 0; border-top: 1px solid var(--line); }
+  .col-center { grid-template-rows: none; }
 }

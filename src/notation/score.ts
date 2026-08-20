@@ -35,6 +35,15 @@ const STAVE_TOP = 30
 const HEIGHT = 170
 const PADDING = 12
 
+/** Room one note needs before the engraving starts to look cramped. */
+const WIDTH_PER_NOTE = 34
+/** Extra room per grace note: an ornament is drawn left of its main note. */
+const WIDTH_PER_GRACE = 16
+/** Clef and the formatter's own left margin. */
+const FIXED_WIDTH = 60
+/** Past this the stave stops looking like music and starts looking like a logo. */
+const MAX_ZOOM = 2.4
+
 export type RenderedScore = {
   /** One SVG group per stroke, indexed to match the input. Drives the playhead. */
   noteElements: (SVGElement | undefined)[]
@@ -107,11 +116,32 @@ export function renderScore(
   host.replaceChildren()
   if (strokes.length === 0) return { noteElements: [] }
 
-  const renderer = new Renderer(host, Renderer.Backends.SVG)
-  renderer.resize(width, HEIGHT)
-  const context = renderer.getContext()
+  // Scaling the whole context rather than laying out at the full pixel width
+  // keeps every proportion VexFlow was designed around — note spacing, beam
+  // thickness, the gap between a grace note and its main note — and simply
+  // makes them bigger. Formatting to a very wide stave instead would stretch
+  // the spacing while leaving the glyphs small.
+  //
+  // How far it can scale is set by the music, not the container: eight notes
+  // can be drawn large in a given column, thirty-four cannot. Below 1x the
+  // stave keeps its size and overflows into a horizontal scroll rather than
+  // shrinking the notes past readability.
+  const neededWidth =
+    PADDING * 2 +
+    FIXED_WIDTH +
+    strokes.reduce(
+      (total, stroke) => total + WIDTH_PER_NOTE + (stroke.grace?.length ?? 0) * WIDTH_PER_GRACE,
+      0,
+    )
+  const zoom = Math.min(MAX_ZOOM, Math.max(1, width / neededWidth))
+  const logicalWidth = Math.max(neededWidth, width / zoom)
 
-  const stave = new Stave(PADDING, STAVE_TOP, width - PADDING * 2)
+  const renderer = new Renderer(host, Renderer.Backends.SVG)
+  renderer.resize(logicalWidth * zoom, HEIGHT * zoom)
+  const context = renderer.getContext()
+  context.scale(zoom, zoom)
+
+  const stave = new Stave(PADDING, STAVE_TOP, logicalWidth - PADDING * 2)
   stave.addClef('percussion')
   stave.setContext(context).draw()
 
@@ -122,7 +152,7 @@ export function renderScore(
   // SOFT mode: a rudiment's repeating unit is rarely a whole bar — a single
   // stroke roll is two 16ths — and strict mode would reject it as incomplete.
   const voice = new Voice().setMode(Voice.Mode.SOFT).addTickables(notes)
-  new Formatter().joinVoices([voice]).format([voice], width - PADDING * 2 - 60)
+  new Formatter().joinVoices([voice]).format([voice], logicalWidth - PADDING * 2 - 60)
 
   voice.draw(context, stave)
   for (const beam of beams) beam.setContext(context).draw()
