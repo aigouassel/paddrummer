@@ -42,7 +42,7 @@ const WIDTH_PER_GRACE = 16
 /** Clef and the formatter's own left margin. */
 const FIXED_WIDTH = 60
 /** Past this the stave stops looking like music and starts looking like a logo. */
-const MAX_ZOOM = 2.4
+const MAX_ZOOM = 1.5
 
 export type RenderedScore = {
   /** One SVG group per stroke, indexed to match the input. Drives the playhead. */
