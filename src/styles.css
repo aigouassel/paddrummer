@@ -74,47 +74,31 @@ select {
 
 .toggle { display: flex; align-items: center; gap: 0.4rem; color: var(--muted); font-size: 0.9rem; }
 
-.strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
+.score {
   margin: 2rem 0 0;
-  padding: 0;
-  list-style: none;
+  overflow-x: auto;
 }
 
-.stroke {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-width: 3rem;
-  padding: 0.6rem 0.4rem 0.35rem;
-  border: 1px solid var(--line);
-  border-radius: 0.4rem;
-  background: var(--card);
-  transition: background 90ms linear, border-color 90ms linear;
+/*
+ * VexFlow hard-codes fill="black" stroke="black" on the root <svg>, and every
+ * child inherits rather than carrying its own colour. CSS outranks a
+ * presentation attribute, so recolouring the whole score — and the playhead —
+ * is two rules and no re-render.
+ */
+.score svg {
+  fill: var(--fg);
+  stroke: var(--fg);
 }
 
-.stroke .grace {
-  position: absolute;
-  top: 0.15rem;
-  left: 0.3rem;
-  font-size: 0.65rem;
-  color: var(--muted);
+.score .is-active {
+  fill: var(--accent);
+  stroke: var(--accent);
 }
 
-.stroke .hand { font-size: 1.15rem; font-weight: 600; }
-.stroke .value { font-size: 0.6rem; color: var(--muted); }
-
-.stroke.is-accent { border-color: var(--accent); }
-.stroke.is-accent .hand { color: var(--accent); }
-
-.stroke.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
+.score .is-active path,
+.score .is-active rect,
+.score .is-active text {
+  transition: fill 70ms linear, stroke 70ms linear;
 }
-.stroke.is-active .hand,
-.stroke.is-active .value,
-.stroke.is-active .grace { color: #fff; }
 
 .note { margin-top: 1.5rem; font-size: 0.875rem; color: var(--muted); }

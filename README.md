@@ -50,7 +50,7 @@ yarn typecheck  # tsc --noEmit
 
 - [x] 1. Domain model + the 40 rudiments as data
 - [x] 2. Audio clock, lookahead scheduler, metronome, tempo control
-- [ ] 3. VexFlow rendering + moving playhead
+- [x] 3. VexFlow rendering + moving playhead
 - [ ] 4. Keyboard `HitSource` + scoring engine
 - [ ] 5. Microphone onset detection + latency calibration
 - [ ] 6. Exercise list, progression, `ProgressStore`

@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { RUDIMENTS, RUDIMENTS_BY_ID } from '../domain/rudiments'
 import type { RudimentCategory } from '../domain/pattern'
 import { usePractice } from './usePractice'
-import { StickingStrip } from './StickingStrip'
+import { Score } from './Score'
 
 const CATEGORY_LABELS: Record<RudimentCategory, string> = {
   roll: 'I. Roll Rudiments',
@@ -80,7 +80,7 @@ export function App() {
         </div>
       </section>
 
-      <StickingStrip strokes={strokes} activeIndex={activeStroke} />
+      <Score strokes={strokes} activeIndex={activeStroke} />
 
       {rudiment.notes ? <p className="note">{rudiment.notes}</p> : null}
     </main>
