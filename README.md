@@ -48,10 +48,19 @@ yarn typecheck  # tsc --noEmit
 
 ## Roadmap
 
-- [ ] 1. Domain model + the 40 rudiments as data
-- [ ] 2. Audio clock, lookahead scheduler, metronome, tempo control
+- [x] 1. Domain model + the 40 rudiments as data
+- [x] 2. Audio clock, lookahead scheduler, metronome, tempo control
 - [ ] 3. VexFlow rendering + moving playhead
 - [ ] 4. Keyboard `HitSource` + scoring engine
 - [ ] 5. Microphone onset detection + latency calibration
 - [ ] 6. Exercise list, progression, `ProgressStore`
 - [ ] 7. *(v2)* Hono + Postgres backend for accounts and cross-device sync
+
+## Parked
+
+Thirteen of the forty stickings were never confirmed against a primary source —
+the uncertainty is concentrated in the drag family, and Vic Firth publishes its
+notation only as images. They carry `verified: false` in `src/domain/rudiments.ts`
+and are listed by the `UNVERIFIED` export. By decision the app treats them as
+correct and does not surface the flag; the flag remains as the record of what is
+outstanding should someone want to check them against a rudiment book.

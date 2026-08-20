@@ -83,13 +83,6 @@ export function App() {
       <StickingStrip strokes={strokes} activeIndex={activeStroke} />
 
       {rudiment.notes ? <p className="note">{rudiment.notes}</p> : null}
-
-      {!rudiment.verified ? (
-        <p className="warning">
-          This sticking has not been confirmed against a primary source. Check it against a
-          rudiment book before practising it.
-        </p>
-      ) : null}
     </main>
   )
 }

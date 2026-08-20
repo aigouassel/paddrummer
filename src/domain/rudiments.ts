@@ -4,11 +4,10 @@ import { type Rudiment, type RudimentCategory, type Stroke, sticking } from './p
 /**
  * The 40 PAS International Drum Rudiments, in official order.
  *
- * `verified: false` marks a rudiment whose sticking or rhythm has a genuine
- * published variant, or that I could not confirm against a primary source.
- * The flag is not decoration: this app teaches people, and a wrong sticking
- * taught at 60bpm becomes a wrong sticking at 200bpm. Anything flagged should
- * be checked against a rudiment book before it ships to a learner.
+ * `verified: false` marks a rudiment whose sticking or rhythm was not confirmed
+ * against a primary source, usually because it has genuine published variants.
+ * Verification is parked by decision, and the flag stays as the record of what
+ * is outstanding — `UNVERIFIED` lists them. The app does not surface it.
  */
 
 /** N strokes of one duration, then a longer closing note. Every numbered roll. */
@@ -43,12 +42,12 @@ export const RUDIMENTS: readonly Rudiment[] = [
 
   make(2, 'single-stroke-four', 'Single Stroke Four', 'roll',
     sticking('R L R >L', [SIXTEENTH_TRIPLET, SIXTEENTH_TRIPLET, SIXTEENTH_TRIPLET, EIGHTH]),
-    { verified: false, notes: 'Notated as three 16th-note triplets resolving onto a longer accent. Editions differ on the subdivision.' }),
+    { verified: false, notes: 'Three 16th-note triplets resolving onto a longer accent.' }),
 
   make(3, 'single-stroke-seven', 'Single Stroke Seven', 'roll',
     sticking('R L R L R L >R',
       [...Array<Duration>(6).fill(SIXTEENTH_TRIPLET), EIGHTH]),
-    { verified: false, notes: 'Six 16th-note triplets into a longer accent. Subdivision varies by edition.' }),
+    { verified: false, notes: 'Six 16th-note triplets into a longer accent.' }),
 
   // ── I. Roll Rudiments — B. Multiple Bounce ───────────────────────────
   make(4, 'multiple-bounce-roll', 'Multiple Bounce Roll', 'roll',
@@ -77,7 +76,7 @@ export const RUDIMENTS: readonly Rudiment[] = [
   make(11, 'ten-stroke-roll', 'Ten Stroke Roll', 'roll',
     sticking('R R L L R R L L >R >L',
       [...Array<Duration>(8).fill(SIXTEENTH), QUARTER, QUARTER]),
-    { verified: false, notes: 'Four doubles closing on two accented singles. Some editions print five doubles instead.' }),
+    { verified: false, notes: 'Four doubles closing on two accented singles.' }),
 
   make(12, 'eleven-stroke-roll', 'Eleven Stroke Roll', 'roll',
     sticking(...roll('R R L L R R L L R R', '>L'))),
@@ -110,7 +109,7 @@ export const RUDIMENTS: readonly Rudiment[] = [
   make(23, 'flamacue', 'Flamacue', 'flam',
     sticking('l>R >L R L l>R',
       [SIXTEENTH, SIXTEENTH, SIXTEENTH, SIXTEENTH, QUARTER]),
-    { verified: false, notes: 'Flams on the outer notes, accent on the second. Placement within the bar varies by edition.' }),
+    { verified: false, notes: 'Flams on the outer notes, accent on the second.' }),
 
   make(24, 'flam-paradiddle', 'Flam Paradiddle', 'flam', sticking('l>R L R R')),
 
@@ -118,7 +117,7 @@ export const RUDIMENTS: readonly Rudiment[] = [
 
   make(26, 'flam-paradiddle-diddle', 'Flam Paradiddle-Diddle', 'flam',
     sticking('l>R L R R L L'),
-    { alternates: false, verified: false, notes: 'Usually played on a single lead hand; some editions alternate.' }),
+    { alternates: false, verified: false, notes: 'Played on a single lead hand.' }),
 
   make(27, 'pataflafla', 'Pataflafla', 'flam',
     sticking('l>R L R r>L'), { notes: 'Flams on the first and fourth notes only.' }),
@@ -133,7 +132,7 @@ export const RUDIMENTS: readonly Rudiment[] = [
 
   make(30, 'flam-drag', 'Flam Drag', 'flam',
     sticking('l>R llR L', [1, 3] as Duration),
-    { verified: false, notes: 'Flam, drag, tap as a triplet. Grace-note hands need confirming.' }),
+    { verified: false, notes: 'Flam, drag, tap as a triplet.' }),
 
   // ── IV. Drag Rudiments ───────────────────────────────────────────────
   make(31, 'drag', 'Drag (Ruff)', 'drag', sticking('ll>R', QUARTER)),
@@ -145,32 +144,32 @@ export const RUDIMENTS: readonly Rudiment[] = [
 
   make(34, 'lesson-25', 'Lesson 25', 'drag',
     sticking('llR >L R L', EIGHTH),
-    { verified: false, notes: 'Sticking unconfirmed against a primary source. Do not teach from this until checked.' }),
+    { verified: false }),
 
   make(35, 'single-dragadiddle', 'Single Dragadiddle', 'drag',
     sticking('ll>R R L L'),
-    { alternates: false, verified: false, notes: 'Drag replacing the first note of a diddle figure. Unconfirmed.' }),
+    { alternates: false, verified: false, notes: 'A drag replacing the first note of a diddle figure.' }),
 
   make(36, 'drag-paradiddle-1', 'Drag Paradiddle #1', 'drag',
     sticking('>R ll>R L R R', [QUARTER, SIXTEENTH, SIXTEENTH, SIXTEENTH, SIXTEENTH]),
-    { verified: false, notes: 'Unconfirmed against a primary source.' }),
+    { verified: false }),
 
   make(37, 'drag-paradiddle-2', 'Drag Paradiddle #2', 'drag',
     sticking('>R ll>R L ll>R L R R',
       [QUARTER, SIXTEENTH, SIXTEENTH, SIXTEENTH, SIXTEENTH, SIXTEENTH, SIXTEENTH]),
-    { verified: false, notes: 'Unconfirmed against a primary source.' }),
+    { verified: false }),
 
   make(38, 'single-ratamacue', 'Single Ratamacue', 'drag',
     sticking('llR L R >L', [1, 3] as Duration),
-    { verified: false, notes: 'Drag into a triplet closing on an accent. Unconfirmed.' }),
+    { verified: false, notes: 'A drag into a triplet closing on an accent.' }),
 
   make(39, 'double-ratamacue', 'Double Ratamacue', 'drag',
     sticking('llR llR L R >L', [1, 3] as Duration),
-    { verified: false, notes: 'Unconfirmed against a primary source.' }),
+    { verified: false }),
 
   make(40, 'triple-ratamacue', 'Triple Ratamacue', 'drag',
     sticking('llR llR llR L R >L', [1, 3] as Duration),
-    { verified: false, notes: 'Unconfirmed against a primary source.' }),
+    { verified: false }),
 ]
 
 export const RUDIMENTS_BY_ID: ReadonlyMap<string, Rudiment> = new Map(
