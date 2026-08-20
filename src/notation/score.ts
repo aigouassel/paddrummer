@@ -31,8 +31,13 @@ import { toVexDuration } from './vexDuration'
 /** The line every snare note sits on. */
 const PITCH = 'c/5'
 
-const STAVE_TOP = 30
-const HEIGHT = 170
+const STAVE_TOP = 26
+/**
+ * Tall enough for accents and grace-note stems above the stave and sticking
+ * letters below it, and no taller — surplus canvas is invisible whitespace
+ * that pushes everything under the stave further down the page.
+ */
+const HEIGHT = 140
 const PADDING = 12
 
 /** Room one note needs before the engraving starts to look cramped. */

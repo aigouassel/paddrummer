@@ -70,14 +70,18 @@ body {
 .col-center {
   grid-area: center;
   display: grid;
-  grid-template-rows: 1fr auto auto;
+  /* Stave and transport centre together; the read-out stays pinned below. */
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 1.5rem;
 }
 
-/* The stave sits in the optical centre of the column it owns. */
 .stage {
   display: grid;
-  align-content: center;
+  /* Distributes the stave and the transport evenly through the column rather
+     than clamping them together, so the controls sit midway between the music
+     and the read-out at any window height. */
+  align-content: space-evenly;
+  gap: 1.5rem;
   min-height: 0;
 }
 
@@ -294,4 +298,5 @@ select {
   .col { overflow: visible; }
   .col-left, .col-right { border: 0; border-top: 1px solid var(--line); }
   .col-center { grid-template-rows: none; }
+  .stage { align-content: start; }
 }

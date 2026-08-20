@@ -41,17 +41,18 @@ export function App() {
       </aside>
 
       <main className="col col-center">
+        {/* Stave and transport travel together: the controls belong to the
+            music directly above them, not to the bottom of the column. */}
         <div className="stage">
           <Score strokes={strokes} activeIndex={activeStroke} />
+          <Transport
+            isPlaying={isPlaying}
+            disabled={calibrating}
+            bpm={bpm}
+            onToggle={toggle}
+            onTempo={setTempo}
+          />
         </div>
-
-        <Transport
-          isPlaying={isPlaying}
-          disabled={calibrating}
-          bpm={bpm}
-          onToggle={toggle}
-          onTempo={setTempo}
-        />
 
         {calibrating ? (
           <p className="hint centered">
