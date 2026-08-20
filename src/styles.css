@@ -102,3 +102,65 @@ select {
 }
 
 .note { margin-top: 1.5rem; font-size: 0.875rem; color: var(--muted); }
+
+.ghost {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.ghost:hover { color: var(--fg); border-color: var(--muted); }
+
+.play:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.hint {
+  margin-top: 1.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  max-width: 34rem;
+}
+
+kbd {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 0.25rem;
+  background: var(--card);
+  color: var(--fg);
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+  margin: 1.75rem 0 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--card);
+}
+
+.stats dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stats dd {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats .qualifier {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+}

@@ -79,10 +79,35 @@ export function toTimeline(
   return notes
 }
 
+/** A note the player is expected to hit, and with which hand. */
+export type ExpectedHit = {
+  strokeIndex: number
+  timeSec: number
+  hand: Hand
+  accent: boolean
+}
+
 /**
- * The times the player is judged against: one per Stroke, ornaments excluded.
- * This is a one-line function precisely because grace notes live on the stroke
- * rather than beside it.
+ * What the player is judged against: one entry per Stroke, ornaments excluded.
+ * Grace notes are decorations of a stroke, not separate targets — nobody is
+ * marked down for the placement of a flam's grace note.
+ */
+export const expectedHits = (
+  strokes: readonly Stroke[],
+  bpm: number,
+  options: TimelineOptions = {},
+): ExpectedHit[] =>
+  toTimeline(strokes, bpm, options)
+    .filter((note) => note.kind === 'main')
+    .map((note) => ({
+      strokeIndex: note.strokeIndex,
+      timeSec: note.timeSec,
+      hand: note.hand,
+      accent: note.accent,
+    }))
+
+/**
+ * Just the times, for callers that do not care which hand.
  */
 export const expectedHitTimes = (
   strokes: readonly Stroke[],

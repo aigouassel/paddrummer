@@ -3,6 +3,8 @@ import { RUDIMENTS, RUDIMENTS_BY_ID } from '../domain/rudiments'
 import type { RudimentCategory } from '../domain/pattern'
 import { usePractice } from './usePractice'
 import { Score } from './Score'
+import { ScorePanel } from './ScorePanel'
+import { CALIBRATION_BEATS } from '../audio/engine'
 
 const CATEGORY_LABELS: Record<RudimentCategory, string> = {
   roll: 'I. Roll Rudiments',
@@ -26,8 +28,13 @@ export function App() {
     }))
   }, [])
 
-  const { isPlaying, bpm, metronome, strokes, activeStroke, toggle, setTempo, setMetronome } =
-    usePractice(rudiment)
+  const {
+    isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
+    strokes, activeStroke, report,
+    toggle, calibrate, setTempo, setMetronome, clearLatency,
+  } = usePractice(rudiment)
+
+  const calibrating = mode === 'calibrating'
 
   return (
     <main className="app">
@@ -66,8 +73,8 @@ export function App() {
         </label>
 
         <div className="controls">
-          <button type="button" className="play" onClick={toggle}>
-            {isPlaying ? 'Stop' : 'Play'}
+          <button type="button" className="play" onClick={toggle} disabled={calibrating}>
+            {isPlaying && !calibrating ? 'Stop' : 'Play'}
           </button>
           <label className="toggle">
             <input
@@ -77,10 +84,28 @@ export function App() {
             />
             <span>Metronome</span>
           </label>
+          <button type="button" className="ghost" onClick={calibrate}>
+            {calibrating ? `Tap along… ${calibrationTaps}/${CALIBRATION_BEATS}` : 'Calibrate'}
+          </button>
+          {latencyMs !== 0 && !calibrating ? (
+            <button type="button" className="ghost" onClick={clearLatency} title="Reset to zero">
+              Latency {latencyMs > 0 ? '+' : ''}
+              {latencyMs}ms
+            </button>
+          ) : null}
         </div>
       </section>
 
       <Score strokes={strokes} activeIndex={activeStroke} />
+
+      {calibrating ? (
+        <p className="hint">
+          Tap any key in time with the click. {CALIBRATION_BEATS} taps measures the delay
+          between what you hear and what the app sees, so your timing is scored fairly.
+        </p>
+      ) : (
+        <ScorePanel report={report} />
+      )}
 
       {rudiment.notes ? <p className="note">{rudiment.notes}</p> : null}
     </main>

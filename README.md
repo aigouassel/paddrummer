@@ -51,7 +51,7 @@ yarn typecheck  # tsc --noEmit
 - [x] 1. Domain model + the 40 rudiments as data
 - [x] 2. Audio clock, lookahead scheduler, metronome, tempo control
 - [x] 3. VexFlow rendering + moving playhead
-- [ ] 4. Keyboard `HitSource` + scoring engine
+- [x] 4. Keyboard `HitSource` + scoring engine + latency calibration
 - [ ] 5. Microphone onset detection + latency calibration
 - [ ] 6. Exercise list, progression, `ProgressStore`
 - [ ] 7. *(v2)* Hono + Postgres backend for accounts and cross-device sync
