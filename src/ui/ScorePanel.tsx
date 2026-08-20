@@ -12,13 +12,16 @@ const ms = (seconds: number) => `${seconds >= 0 ? '+' : ''}${Math.round(seconds 
  * beat. The second is a much easier fix, and averaging them together would
  * hide it.
  */
-export function ScorePanel({ report }: { report: ScoreReport | null }) {
+export function ScorePanel({
+  report,
+  showSticking,
+}: {
+  report: ScoreReport | null
+  /** A microphone hears one drum, not two sticks, so it cannot judge sticking. */
+  showSticking: boolean
+}) {
   if (!report || report.summary.total === 0) {
-    return (
-      <p className="hint">
-        Play along: <kbd>F</kbd> left hand, <kbd>J</kbd> right hand.
-      </p>
-    )
+    return <p className="hint">Start playing and your timing will appear here.</p>
   }
 
   const { summary } = report
@@ -44,12 +47,12 @@ export function ScorePanel({ report }: { report: ScoreReport | null }) {
           ) : null}
         </dd>
       </div>
-      <div>
-        <dt>Sticking</dt>
-        <dd>
-          {summary.handErrors === 0 ? 'clean' : `${summary.handErrors} wrong`}
-        </dd>
-      </div>
+      {showSticking ? (
+        <div>
+          <dt>Sticking</dt>
+          <dd>{summary.handErrors === 0 ? 'clean' : `${summary.handErrors} wrong`}</dd>
+        </div>
+      ) : null}
       <div>
         <dt>Dropped</dt>
         <dd>

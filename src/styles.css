@@ -164,3 +164,50 @@ kbd {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+.input-panel { margin-top: 2rem; }
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  overflow: hidden;
+}
+
+.segmented button {
+  padding: 0.4rem 1rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.segmented button.is-selected { background: var(--accent); color: #fff; }
+.segmented button:not(.is-selected):hover { color: var(--fg); }
+
+.mic { display: grid; gap: 0.9rem; }
+
+.meter {
+  position: relative;
+  height: 0.6rem;
+  border-radius: 0.3rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.meter-level {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+
+.meter-trigger {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--fg);
+  opacity: 0.6;
+}

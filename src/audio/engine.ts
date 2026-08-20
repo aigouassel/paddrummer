@@ -10,6 +10,8 @@ import {
 } from '../domain/scoring'
 import type { ExpectedHit, TimedNote } from '../domain/timeline'
 import type { HitSource } from '../input/hitSource'
+import { KeyboardHitSource } from '../input/keyboard'
+import { MicrophoneHitSource, type MicMeter } from '../input/microphone'
 import { Kit } from './kit'
 import { Sequencer } from './sequencer'
 
@@ -32,6 +34,8 @@ const MEMORY_SEC = 6
 export const CALIBRATION_BEATS = 8
 
 export type EngineMode = 'practice' | 'calibrating'
+export type InputKind = 'keyboard' | 'microphone'
+export type MicStatus = 'off' | 'starting' | 'listening' | 'denied' | 'unsupported'
 
 export type EngineState = {
   isPlaying: boolean
@@ -40,6 +44,10 @@ export type EngineState = {
   mode: EngineMode
   latencyMs: number
   calibrationTaps: number
+  input: InputKind
+  micStatus: MicStatus
+  micError: string | null
+  sensitivity: number
 }
 
 export class PracticeEngine {
@@ -62,6 +70,13 @@ export class PracticeEngine {
   private latencySec = 0
 
   private detachInput: (() => void) | null = null
+  private inputKind: InputKind = 'keyboard'
+  private micStatus: MicStatus = 'off'
+  private micError: string | null = null
+  private mic: MicrophoneHitSource | null = null
+  private sensitivity = 4
+  /** Kept off the snapshot: it updates ~50 times a second and would thrash React. */
+  private meter: MicMeter = { level: 0, baseline: 0, ready: false }
   private listeners = new Set<() => void>()
   /**
    * A cached snapshot, not a freshly built object.
@@ -80,14 +95,22 @@ export class PracticeEngine {
     mode: 'practice',
     latencyMs: 0,
     calibrationTaps: 0,
+    input: 'keyboard',
+    micStatus: 'off',
+    micError: null,
+    sensitivity: 4,
   }
 
   constructor() {
     // The metronome is just a second sequencer playing one note per beat, so
     // it stays locked to the same clock and the same tempo changes for free.
     this.beats.setPattern(sticking('R', QUARTER))
+    this.useKeyboard()
     this.emit()
   }
+
+  /** Live input meter, polled rather than pushed. See `meter` above. */
+  getMeter = (): MicMeter => this.meter
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener)
@@ -123,14 +146,88 @@ export class PracticeEngine {
     return ctx.currentTime + (performanceMs - performance.now()) / 1000
   }
 
-  attachInput(source: HitSource): void {
+  private attachInput(source: HitSource): void | Promise<void> {
     this.detachInput?.()
     const unsubscribe = source.subscribe((hit) => this.recordHit(hit))
-    source.start()
+    const started = source.start()
     this.detachInput = () => {
       unsubscribe()
       source.stop()
     }
+    return started
+  }
+
+  useKeyboard(): void {
+    this.mic = null
+    this.inputKind = 'keyboard'
+    this.micStatus = 'off'
+    this.micError = null
+    this.attachInput(new KeyboardHitSource(this.audioTimeFromPerformance))
+    this.emit()
+  }
+
+  /**
+   * Switches to listening through the microphone.
+   *
+   * Needs a user gesture twice over: once for the AudioContext, once for the
+   * permission prompt. Both are deliberate platform behaviour, so this is only
+   * ever called from a click.
+   */
+  async useMicrophone(): Promise<void> {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.micStatus = 'unsupported'
+      this.micError = 'This browser cannot open a microphone.'
+      this.emit()
+      return
+    }
+
+    this.inputKind = 'microphone'
+    this.micStatus = 'starting'
+    this.micError = null
+    this.emit()
+
+    try {
+      const ctx = await this.ensureAudio()
+      const mic = new MicrophoneHitSource(
+        ctx,
+        (meter) => {
+          this.meter = meter
+        },
+        this.sensitivity,
+      )
+      await mic.start()
+
+      // The permission prompt can sit open indefinitely. If the player gave up
+      // and switched back to the keyboard meanwhile, a late "Allow" must not
+      // silently reattach the microphone underneath them.
+      if (this.inputKind !== 'microphone') {
+        mic.stop()
+        return
+      }
+
+      this.mic = mic
+      this.attachInput(mic)
+      this.micStatus = 'listening'
+    } catch (error) {
+      this.mic = null
+      this.micStatus = error instanceof DOMException && error.name === 'NotAllowedError'
+        ? 'denied'
+        : 'unsupported'
+      this.micError =
+        this.micStatus === 'denied'
+          ? 'Microphone permission was refused.'
+          : error instanceof Error
+            ? error.message
+            : 'Could not open the microphone.'
+      this.useKeyboard()
+    }
+    this.emit()
+  }
+
+  setSensitivity(value: number): void {
+    this.sensitivity = value
+    this.mic?.setThreshold(value)
+    this.emit()
   }
 
   recordHit(hit: Hit): void {
@@ -174,18 +271,13 @@ export class PracticeEngine {
   async start(mode: EngineMode = 'practice'): Promise<void> {
     if (mode === 'practice' && this.strokes.length === 0) return
 
-    if (!this.ctx) {
-      this.ctx = new AudioContext({ latencyHint: 'interactive' })
-      this.kit = new Kit(this.ctx)
-    }
-    if (this.ctx.state === 'suspended') await this.ctx.resume()
-
+    await this.ensureAudio()
     this.mode = mode
     this.clearHistory()
     this.beatCount = 0
 
     // Start slightly ahead so the first note is scheduled, never chased.
-    const startAt = this.ctx.currentTime + 0.15
+    const startAt = this.currentTimeSec + 0.15
     this.notes.start(startAt)
     this.beats.start(startAt)
 
@@ -202,6 +294,13 @@ export class PracticeEngine {
     }
     this.mode = 'practice'
     this.emit()
+  }
+
+  private async ensureAudio(): Promise<AudioContext> {
+    this.ctx ??= new AudioContext({ latencyHint: 'interactive' })
+    this.kit ??= new Kit(this.ctx)
+    if (this.ctx.state === 'suspended') await this.ctx.resume()
+    return this.ctx
   }
 
   startCalibration(): Promise<void> {
@@ -315,6 +414,10 @@ export class PracticeEngine {
       mode: this.mode,
       latencyMs: Math.round(this.latencySec * 1000),
       calibrationTaps: this.mode === 'calibrating' ? this.rawHits.length : 0,
+      input: this.inputKind,
+      micStatus: this.micStatus,
+      micError: this.micError,
+      sensitivity: this.sensitivity,
     }
     for (const listener of this.listeners) listener()
   }

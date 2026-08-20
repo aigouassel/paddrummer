@@ -52,9 +52,21 @@ yarn typecheck  # tsc --noEmit
 - [x] 2. Audio clock, lookahead scheduler, metronome, tempo control
 - [x] 3. VexFlow rendering + moving playhead
 - [x] 4. Keyboard `HitSource` + scoring engine + latency calibration
-- [ ] 5. Microphone onset detection + latency calibration
+- [x] 5. Microphone onset detection
 - [ ] 6. Exercise list, progression, `ProgressStore`
 - [ ] 7. *(v2)* Hono + Postgres backend for accounts and cross-device sync
+
+## Playing with a microphone
+
+Wear headphones. The microphone cannot tell your sticks from the metronome, so
+played out loud the app hears its own click and counts it as your playing.
+
+A microphone also cannot tell your hands apart — it hears one drum, not two
+sticks — so sticking is only checked when the keyboard is the input.
+
+Run **Calibrate** once per setup. Every input path delays the strike by tens of
+milliseconds; the offset is constant and therefore removable, but only once it
+has been measured.
 
 ## Parked
 

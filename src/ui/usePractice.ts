@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from '
 import { PracticeEngine } from '../audio/engine'
 import { fullCycle, type Rudiment } from '../domain/pattern'
 import type { ScoreReport } from '../domain/scoring'
-import { KeyboardHitSource } from '../input/keyboard'
 
 /** How often the score read-out refreshes. Fast enough to feel live, slow
  *  enough not to re-render React on every animation frame. */
@@ -38,8 +37,6 @@ export function usePractice(rudiment: Rudiment) {
   }, [engine, rudiment])
 
   useEffect(() => {
-    engine.attachInput(new KeyboardHitSource(engine.audioTimeFromPerformance))
-
     // Timing bugs are invisible in a screenshot, so expose the engine in dev:
     // `__engine.report()` in the console shows what the scorer sees.
     if (import.meta.env.DEV) Reflect.set(window, '__engine', engine)
@@ -84,5 +81,9 @@ export function usePractice(rudiment: Rudiment) {
     setTempo: useCallback((bpm: number) => engine.setTempo(bpm), [engine]),
     setMetronome: useCallback((on: boolean) => engine.setMetronome(on), [engine]),
     clearLatency: useCallback(() => engine.setLatency(0), [engine]),
+    useKeyboard: useCallback(() => engine.useKeyboard(), [engine]),
+    useMicrophone: useCallback(() => void engine.useMicrophone(), [engine]),
+    setSensitivity: useCallback((v: number) => engine.setSensitivity(v), [engine]),
+    getMeter: engine.getMeter,
   }
 }

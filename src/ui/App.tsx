@@ -4,6 +4,7 @@ import type { RudimentCategory } from '../domain/pattern'
 import { usePractice } from './usePractice'
 import { Score } from './Score'
 import { ScorePanel } from './ScorePanel'
+import { InputPanel } from './InputPanel'
 import { CALIBRATION_BEATS } from '../audio/engine'
 
 const CATEGORY_LABELS: Record<RudimentCategory, string> = {
@@ -30,8 +31,10 @@ export function App() {
 
   const {
     isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
+    input, micStatus, micError, sensitivity, getMeter,
     strokes, activeStroke, report,
     toggle, calibrate, setTempo, setMetronome, clearLatency,
+    useKeyboard, useMicrophone, setSensitivity,
   } = usePractice(rudiment)
 
   const calibrating = mode === 'calibrating'
@@ -100,12 +103,23 @@ export function App() {
 
       {calibrating ? (
         <p className="hint">
-          Tap any key in time with the click. {CALIBRATION_BEATS} taps measures the delay
-          between what you hear and what the app sees, so your timing is scored fairly.
+          Play along with the click. {CALIBRATION_BEATS} strikes measures the delay between
+          what you hear and what the app sees, so your timing is scored fairly.
         </p>
       ) : (
-        <ScorePanel report={report} />
+        <ScorePanel report={report} showSticking={input === 'keyboard'} />
       )}
+
+      <InputPanel
+        input={input}
+        micStatus={micStatus}
+        micError={micError}
+        sensitivity={sensitivity}
+        getMeter={getMeter}
+        onUseKeyboard={useKeyboard}
+        onUseMicrophone={useMicrophone}
+        onSensitivity={setSensitivity}
+      />
 
       {rudiment.notes ? <p className="note">{rudiment.notes}</p> : null}
     </main>

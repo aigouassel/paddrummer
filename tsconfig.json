@@ -16,7 +16,11 @@
     "isolatedModules": true,
 
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    // The onset detector is plain JS so its source can be inlined into an
+    // AudioWorklet verbatim while still being imported by tests.
+    "allowJs": true
   },
   "include": ["src", "vite.config.ts"]
 }
