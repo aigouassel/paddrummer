@@ -58,6 +58,28 @@ body {
 .topbar h1 { margin: 0; font-size: 1.15rem; letter-spacing: -0.02em; }
 .topbar p { margin: 0; color: var(--muted); font-size: 0.85rem; }
 
+.nav { display: flex; gap: 0.25rem; margin-left: 0.75rem; }
+
+.nav button {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.nav button:hover { color: var(--fg); }
+
+.nav button.is-current {
+  background: var(--card);
+  border-color: var(--line);
+  color: var(--fg);
+  font-weight: 600;
+}
+
 .col {
   padding: 1.5rem;
   overflow-y: auto;
@@ -300,3 +322,53 @@ select {
   .col-center { grid-template-rows: none; }
   .stage { align-content: start; }
 }
+
+/* ── Exercise steps ─────────────────────────────────────────────── */
+.steps { display: grid; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+
+.steps li {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: var(--card);
+  overflow: hidden;
+}
+
+.steps button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.step-meta { color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+
+.steps li.is-done { opacity: 0.55; }
+.steps li.is-current { border-color: var(--accent); }
+.steps li.is-current .step-name { font-weight: 600; }
+
+/* Fills left to right as the step's repeats are played. */
+.step-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  transition: width 140ms linear;
+}
+
+.step-caption { margin: 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
+.step-caption strong { color: var(--fg); }
+
+/* The exercise transport stacks its caption under the button; the practice
+   page's transport stays a row with the tempo slider beside the button. */
+.transport-stacked { flex-direction: column; gap: 0.75rem; }

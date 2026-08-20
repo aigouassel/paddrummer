@@ -1,88 +1,45 @@
-import { useState } from 'react'
-import { RUDIMENTS_BY_ID } from '../domain/rudiments'
-import { CALIBRATION_BEATS } from '../audio/engine'
-import { usePractice } from './usePractice'
-import { RudimentPicker } from './RudimentPicker'
-import { Transport } from './Transport'
-import { Score } from './Score'
-import { ScorePanel } from './ScorePanel'
-import { InputPanel } from './InputPanel'
+import { EngineProvider } from './EngineContext'
+import { PracticePage } from './PracticePage'
+import { ExercisesPage } from './ExercisesPage'
+import { ROUTES, useRoute, type Route } from './useRoute'
+
+const LABELS: Record<Route, string> = {
+  practice: 'Practice',
+  exercises: 'Exercises',
+}
 
 /**
- * Three columns: what to play, the music itself, and how you are playing it.
+ * The shell: a header with the nav, and three columns the current page fills.
  *
- * The stave takes the whole middle column because it is the thing being read
- * while both hands are busy — everything else is set once and then left alone,
- * so it belongs at the edges rather than between the player and the notes.
+ * Pages render the columns themselves as a fragment rather than being handed
+ * a slot each. The grid areas do the placing, so every page inherits the same
+ * layout without the shell needing to know what any of them contain.
  */
 export function App() {
-  const [rudimentId, setRudimentId] = useState('single-paradiddle')
-  const rudiment = RUDIMENTS_BY_ID.get(rudimentId)!
-
-  const {
-    isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
-    input, micStatus, micError, sensitivity, getMeter,
-    strokes, activeStroke, report,
-    toggle, calibrate, setTempo, setMetronome, clearLatency,
-    useKeyboard, useMicrophone, setSensitivity,
-  } = usePractice(rudiment)
-
-  const calibrating = mode === 'calibrating'
+  const [route, navigate] = useRoute()
 
   return (
-    <div className="layout">
-      <header className="topbar">
-        <h1>paddrummer</h1>
-        <p>The 40 international drum rudiments</p>
-      </header>
+    <EngineProvider>
+      <div className="layout">
+        <header className="topbar">
+          <h1>paddrummer</h1>
+          <nav className="nav">
+            {ROUTES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                className={route === id ? 'is-current' : ''}
+                aria-current={route === id ? 'page' : undefined}
+                onClick={() => navigate(id)}
+              >
+                {LABELS[id]}
+              </button>
+            ))}
+          </nav>
+        </header>
 
-      <aside className="col col-left">
-        <RudimentPicker rudiment={rudiment} onSelect={setRudimentId} />
-      </aside>
-
-      <main className="col col-center">
-        {/* Stave and transport travel together: the controls belong to the
-            music directly above them, not to the bottom of the column. */}
-        <div className="stage">
-          <Score strokes={strokes} activeIndex={activeStroke} />
-          <Transport
-            isPlaying={isPlaying}
-            disabled={calibrating}
-            bpm={bpm}
-            onToggle={toggle}
-            onTempo={setTempo}
-          />
-        </div>
-
-        {calibrating ? (
-          <p className="hint centered">
-            Play along with the click. {CALIBRATION_BEATS} strikes measures the delay between
-            what you hear and what the app sees, so your timing is scored fairly.
-          </p>
-        ) : (
-          <ScorePanel report={report} showSticking={input === 'keyboard'} />
-        )}
-      </main>
-
-      <aside className="col col-right">
-        <InputPanel
-          input={input}
-          micStatus={micStatus}
-          micError={micError}
-          sensitivity={sensitivity}
-          getMeter={getMeter}
-          onUseKeyboard={useKeyboard}
-          onUseMicrophone={useMicrophone}
-          onSensitivity={setSensitivity}
-          metronome={metronome}
-          onMetronome={setMetronome}
-          calibrating={calibrating}
-          calibrationTaps={calibrationTaps}
-          onCalibrate={calibrate}
-          latencyMs={latencyMs}
-          onClearLatency={clearLatency}
-        />
-      </aside>
-    </div>
+        {route === 'exercises' ? <ExercisesPage /> : <PracticePage />}
+      </div>
+    </EngineProvider>
   )
 }

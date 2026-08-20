@@ -59,6 +59,7 @@ export class PracticeEngine {
   private strokes: readonly Stroke[] = []
   private metronomeOn = true
   private beatCount = 0
+  private startedAtSec = 0
   private mode: EngineMode = 'practice'
 
   /** Notes that have been scheduled, as scoring targets and playhead marks. */
@@ -278,6 +279,7 @@ export class PracticeEngine {
 
     // Start slightly ahead so the first note is scheduled, never chased.
     const startAt = this.currentTimeSec + 0.15
+    this.startedAtSec = startAt
     this.notes.start(startAt)
     this.beats.start(startAt)
 
@@ -339,6 +341,20 @@ export class PracticeEngine {
       timeSec: hit.timeSec - this.latencySec,
     }))
     return judge(settled, corrected)
+  }
+
+  /**
+   * Full cycles of the pattern that have finished sounding.
+   *
+   * Derived from the audio clock rather than counted as notes are scheduled,
+   * because scheduling runs up to 120ms ahead — counting there would advance
+   * an exercise to its next step slightly before the player had finished
+   * playing the current one.
+   */
+  get cyclesPlayed(): number {
+    const cycleSec = this.notes.cycleDurationSec
+    if (!this.notes.isPlaying || cycleSec <= 0) return 0
+    return Math.max(0, Math.floor((this.currentTimeSec - this.startedAtSec) / cycleSec))
   }
 
   /** Which stroke is sounding right now, or -1. Drives the visual playhead. */

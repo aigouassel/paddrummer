@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import { PracticeEngine } from '../audio/engine'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEngine } from './EngineContext'
 import { fullCycle, type Rudiment } from '../domain/pattern'
 import type { ScoreReport } from '../domain/scoring'
 
@@ -20,9 +20,7 @@ const REPORT_MS = 100
  * knows what will play; only the audio clock knows what is playing now.
  */
 export function usePractice(rudiment: Rudiment) {
-  const engineRef = useRef<PracticeEngine>(null)
-  engineRef.current ??= new PracticeEngine()
-  const engine = engineRef.current
+  const engine = useEngine()
 
   const state = useSyncExternalStore(engine.subscribe, engine.getState)
   const [activeStroke, setActiveStroke] = useState(-1)
@@ -39,12 +37,9 @@ export function usePractice(rudiment: Rudiment) {
     setReport(null)
   }, [engine, strokes])
 
-  useEffect(() => {
-    // Timing bugs are invisible in a screenshot, so expose the engine in dev:
-    // `__engine.report()` in the console shows what the scorer sees.
-    if (import.meta.env.DEV) Reflect.set(window, '__engine', engine)
-    return () => engine.dispose()
-  }, [engine])
+  // Leaving a page stops its audio. The engine outlives the page, so without
+  // this the metronome carries on from a page that has no Stop button on it.
+  useEffect(() => () => engine.stop(), [engine])
 
   useEffect(() => {
     if (!state.isPlaying) {

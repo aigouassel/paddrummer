@@ -19,14 +19,19 @@ metronome while the app listens to your pad through the microphone.
 
 ```
 src/
-  domain/     Pure TypeScript. No browser APIs. The rudiments as data,
-              pattern expansion, and hit scoring. Fully unit-testable.
+  domain/     Pure TypeScript. No browser APIs. The rudiments and exercises as
+              data, pattern expansion, and hit scoring. Fully unit-testable.
   audio/      AudioContext, lookahead scheduler, click voice.
   input/      HitSource port: KeyboardHitSource | MicHitSource.
   notation/   Adapter from a domain Pattern to a VexFlow stave.
   storage/    ProgressStore interface + localStorage implementation.
-  ui/         React components.
+  ui/         React components, one file per page plus the shared panels.
 ```
+
+Two pages, routed on the URL hash: **Practice** (one rudiment, your tempo) and
+**Exercises** (guided routines that set the rudiment and tempo and advance
+themselves). Both use the same three-column layout and share a single audio
+engine, so calibration and input choice survive navigating between them.
 
 Two rules hold this together:
 
@@ -53,7 +58,8 @@ yarn typecheck  # tsc --noEmit
 - [x] 3. VexFlow rendering + moving playhead
 - [x] 4. Keyboard `HitSource` + scoring engine + latency calibration
 - [x] 5. Microphone onset detection
-- [ ] 6. Exercise list, progression, `ProgressStore`
+- [x] 6a. Exercise list and guided progression
+- [ ] 6b. `ProgressStore`: records, streaks, tempo history
 - [ ] 7. *(v2)* Hono + Postgres backend for accounts and cross-device sync
 
 ## Playing with a microphone
