@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+
+# Yarn (Zero-Install disabled: the release binary IS committed, caches are not)
+.yarn/*
+!.yarn/releases
+.pnp.*
