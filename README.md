@@ -30,10 +30,12 @@ src/
   ui/         React components, one file per page plus the shared panels.
 ```
 
-Two pages, routed on the URL hash: **Practice** (one rudiment, your tempo) and
+Three pages, routed on the URL hash: **Practice** (one rudiment, your tempo),
 **Exercises** (guided routines that set the rudiment and tempo and advance
-themselves). Both use the same three-column layout and share a single audio
-engine, so calibration and input choice survive navigating between them.
+themselves) and **Stick Control** (exercises transcribed from a practice book,
+read a page at a time). All three use the same three-column layout and share a
+single audio engine, so calibration and input choice survive navigating between
+them.
 
 Exercises reads as a worksheet: every step of the routine is engraved down the
 centre column, so the shape of the routine is visible before you start and the
@@ -113,3 +115,21 @@ notation only as images. They carry `verified: false` in `src/domain/rudiments.t
 and are listed by the `UNVERIFIED` export. By decision the app treats them as
 correct and does not surface the flag; the flag remains as the record of what is
 outstanding should someone want to check them against a rudiment book.
+
+## Stick Control
+
+Exercises transcribed from photographs of George Lawrence Stone's *Stick
+Control*, kept a book-page at a time with the printed numbering carried through
+so any one of them can be checked against the source. The page images live in
+`assets/` and are gitignored: the patterns are transcribed for personal
+practice, the scans are not redistributed.
+
+Most of these exercises are a short pattern followed by a tail that simply
+carries on alternating, so the tail is generated from the rule the page follows
+rather than copy-typed — several thousand letters with no way to check them.
+The rule was verified against the printed page for every exercise, and the
+pages that break it are written out literally instead.
+
+The check that matters on a transcription is arithmetic: every exercise must
+fill a whole number of bars of its own metre, which a mistaken duration
+template cannot do.
