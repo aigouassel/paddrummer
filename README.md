@@ -133,3 +133,16 @@ pages that break it are written out literally instead.
 The check that matters on a transcription is arithmetic: every exercise must
 fill a whole number of bars of its own metre, which a mistaken duration
 template cannot do.
+
+Every exercise also records the image and the staff line it was read from, and
+the app prints that reference under whichever one is selected. `my.show-source.py`
+takes the same reference and crops that line out of the original photograph, so
+a transcription can be put beside the page it came from instead of being taken
+on trust:
+
+```
+page-12.HEIC · right column, line 1   ->   ./my.show-source.py 12 right 1
+```
+
+Tests hold the mapping honest: no two exercises may claim the same staff line,
+and between them they must account for every line printed on the page.

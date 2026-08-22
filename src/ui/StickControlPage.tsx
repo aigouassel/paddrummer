@@ -53,7 +53,8 @@ export function StickControlPage() {
           <p className="eyebrow">Stick Control</p>
           <p className="note">
             George Lawrence Stone. Transcribed from the printed pages; the numbers are the
-            book’s, so any exercise can be checked against it.
+            book’s, and each exercise carries the image and staff line it was read from, so
+            any of them can be checked against the page rather than taken on trust.
           </p>
 
           <ul className="catalogue">
@@ -117,7 +118,21 @@ export function StickControlPage() {
                     maxZoom={SHEET_ZOOM}
                   />
 
-                  {current && item.note ? <p className="sheet-note">{item.note}</p> : null}
+                  {current ? (
+                    <p className="sheet-note">
+                      {item.note ? <>{item.note} </> : null}
+                      {/* Where this was read from, so it can be checked against
+                          the page rather than taken on trust. */}
+                      <span className="provenance">
+                        {item.at.file.split('/').pop()} ·{' '}
+                        {bookPage.columns > 1
+                          ? `${item.at.column === 0 ? 'left' : 'right'} column, `
+                          : ''}
+                        line {item.at.row + 1}
+                        {item.at.rows > 1 ? `–${item.at.row + item.at.rows}` : ''}
+                      </span>
+                    </p>
+                  ) : null}
                 </li>
               )
             })}

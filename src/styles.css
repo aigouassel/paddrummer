@@ -519,6 +519,17 @@ select {
 
 .sheet-note strong { color: var(--fg); font-weight: 500; }
 
+/* Where a transcribed exercise was read from, in the source photograph. */
+.provenance {
+  display: inline-block;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 /* ── Exercise catalogue ─────────────────────────────────────────────
    Levels narrow the list to something workable today; categories give the
    remaining handful a shape. */

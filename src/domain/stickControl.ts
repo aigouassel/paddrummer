@@ -12,12 +12,31 @@ import { type Meter, type Phrase, phraseOfSticking } from './phrase'
  * against the page.
  */
 
+/**
+ * Where on the photographed page an exercise was read from.
+ *
+ * A transcription is only worth as much as its traceability: without this,
+ * a wrong sticking is a mystery, and with it you can put the app and the page
+ * side by side and see which of the two is wrong.
+ */
+export type SourceRef = {
+  /** The image this came from, named for the page number printed on it. */
+  file: string
+  /** 0 is the left-hand column of exercises on the page, 1 the right. */
+  column: number
+  /** 0-based staff line down that column. */
+  row: number
+  /** Staff lines the exercise occupies; more than one when a mirror follows. */
+  rows: number
+}
+
 export type BookExercise = {
   /** The number printed beside it on the page. */
   n: number
   phrase: Phrase
   /** Anything printed under the exercise, such as a roll's name. */
   note?: string
+  at: SourceRef
 }
 
 export type BookPage = {
@@ -25,8 +44,31 @@ export type BookPage = {
   title: string
   /** How one bar is built, in words, since the notation alone can be terse. */
   shape: string
+  /** Columns of exercises across the page, and staff lines down each. */
+  columns: number
+  lines: number
   exercises: readonly BookExercise[]
 }
+
+/** Where the photographs live. Gitignored: they are a copyrighted book. */
+export const ASSET_DIR = 'assets/stick-control-for-the-snare-drummer'
+
+export const sourceFile = (page: number): string => `${ASSET_DIR}/page-${page}.HEIC`
+
+/**
+ * Position on a page laid out as a plain grid, filled column by column.
+ *
+ * Every page here but page 9 numbers straight down the left column and then
+ * straight down the right, so the position follows from the index.
+ */
+const grid =
+  (page: number, rowsPerColumn: number) =>
+  (index: number): SourceRef => ({
+    file: sourceFile(page),
+    column: Math.floor(index / rowsPerColumn),
+    row: index % rowsPerColumn,
+    rows: 1,
+  })
 
 // ── Sticking helpers ────────────────────────────────────────────────
 //
@@ -89,13 +131,25 @@ const P9_PATTERNS = [
   'R L R R', 'R L L R', 'R R L R', 'R L L L', 'L R R R',
 ]
 
+/**
+ * Page 9 does not lay out as a grid. Numbers 5, 6 and 7 print a second staff
+ * line beneath them leading with the other hand, so twelve lines carry nine
+ * exercises. These are the first line of each, and how many it occupies.
+ */
+const P9_LINES: [row: number, rows: number][] = [
+  [0, 1], [1, 1], [2, 1], [3, 1], [4, 2], [6, 2], [8, 2], [10, 1], [11, 1],
+]
+
 const page9: BookPage = {
   page: 9,
   title: 'Triplets',
   shape: 'Four eighth notes, then two groups of triplets.',
+  columns: 1,
+  lines: 12,
   exercises: P9_PATTERNS.map((prefix, i) => ({
     n: i + 1,
     phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 6)}`, P9_SLOTS, CUT),
+    at: { file: sourceFile(9), column: 0, row: P9_LINES[i]![0], rows: P9_LINES[i]![1] },
   })),
 }
 
@@ -108,15 +162,19 @@ const page10: BookPage = {
   page: 10,
   title: 'Short Roll Combinations — Single Beat Rolls',
   shape: 'Four eighth notes, then eight sixteenths in single strokes.',
+  columns: 2,
+  lines: 12,
   exercises: [
     ...TWELVE.map((prefix, i) => ({
       n: i + 1,
       phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 8)}`, P10_FULL, CUT),
+      at: grid(10, 12)(i),
     })),
     ...TWELVE.map((prefix, i) => ({
       n: i + 13,
       phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 7)} -`, P10_REST, CUT),
       note: 'The bar ends on a rest.',
+      at: grid(10, 12)(i + 12),
     })),
   ],
 }
@@ -127,16 +185,20 @@ const page11: BookPage = {
   page: 11,
   title: 'Short Roll Combinations — Double Beat Rolls',
   shape: 'Four eighth notes, then eight sixteenths played as doubles.',
+  columns: 2,
+  lines: 12,
   exercises: [
     ...TWELVE.map((prefix, i) => ({
       n: i + 1,
       phrase: phraseOfSticking(`${prefix} ${doublesAfter(prefix, 8)}`, P10_FULL, CUT),
       note: i === 0 ? '9 stroke open roll.' : undefined,
+      at: grid(11, 12)(i),
     })),
     ...TWELVE.map((prefix, i) => ({
       n: i + 13,
       phrase: phraseOfSticking(`${prefix} ${doublesAfter(prefix, 7)} -`, P10_REST, CUT),
       note: i === 0 ? '7 stroke open roll. The bar ends on a rest.' : undefined,
+      at: grid(11, 12)(i + 12),
     })),
   ],
 }
@@ -146,15 +208,33 @@ const page11: BookPage = {
 /** Four eighths, then a half note carrying the closed roll. */
 const P12_SLOTS: Duration[] = [...repeat('8', 4), 'h']
 
+/**
+ * Both halves of the page are written identically — four eighths and a
+ * tremolo half note — and differ only in a tie. The left column's roll is tied
+ * over the bar line, which is what makes it nine strokes rather than seven.
+ * Ties are not modelled here, so the two halves sound alike in the app; the
+ * note on each says so rather than implying a difference that is not there.
+ */
 const page12: BookPage = {
   page: 12,
   title: 'Short Roll Combinations — Closed Roll',
   shape: 'Four eighth notes, then a closed roll held for a half note.',
-  exercises: TWELVE.map((prefix, i) => ({
-    n: i + 1,
-    phrase: phraseOfSticking(`${prefix} ~${singlesAfter(prefix, 1)}`, P12_SLOTS, CUT),
-    note: i === 0 ? '9 stroke closed roll.' : undefined,
-  })),
+  columns: 2,
+  lines: 12,
+  exercises: [
+    ...TWELVE.map((prefix, i) => ({
+      n: i + 1,
+      phrase: phraseOfSticking(`${prefix} ~${singlesAfter(prefix, 1)}`, P12_SLOTS, CUT),
+      note: '9 stroke closed roll — tied over the bar line in the book. Ties are not modelled, so this sounds the same as the 7 stroke version opposite.',
+      at: grid(12, 12)(i),
+    })),
+    ...TWELVE.map((prefix, i) => ({
+      n: i + 13,
+      phrase: phraseOfSticking(`${prefix} ~${singlesAfter(prefix, 1)}`, P12_SLOTS, CUT),
+      note: '7 stroke closed roll — untied.',
+      at: grid(12, 12)(i + 12),
+    })),
+  ],
 }
 
 // ── page 30 — Combinations in 3/8 ───────────────────────────────────
@@ -178,10 +258,13 @@ const page30: BookPage = {
   page: 30,
   title: 'Combinations in 3/8',
   shape: 'Four sixteenths, then a sixteenth-note triplet.',
+  columns: 2,
+  lines: 12,
   exercises: [
     ...[...P30_PLAIN, ...P30_LAST].map((prefix, i) => ({
       n: i + 1,
       phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 3)}`, P30_SLOTS, THREE_EIGHT),
+      at: grid(30, 12)(i),
     })),
     ...[11, 12].map((n, i) => ({
       n,
@@ -191,15 +274,18 @@ const page30: BookPage = {
         THREE_EIGHT,
       ),
       note: '7 stroke closed roll.',
+      at: grid(30, 12)(n - 1),
     })),
     ...P30_ROLLS.map((prefix, i) => ({
       n: i + 13,
       phrase: phraseOfSticking(`${prefix} ~${singlesAfter(prefix, 1)}`, P30_ROLL, THREE_EIGHT),
       note: 'Closed roll.',
+      at: grid(30, 12)(i + 12),
     })),
     ...P30_TAILED.map(([prefix, tail], i) => ({
       n: i + 18,
       phrase: phraseOfSticking(`${prefix} ${tail}`, P30_SLOTS, THREE_EIGHT),
+      at: grid(30, 12)(i + 17),
     })),
   ],
 }
@@ -227,7 +313,13 @@ function reviewExercise(
   const one = `${prefix} ${tail(prefix, bars.length - 4)}`
   const spec = [one, one, one, finaleSpec].join(' ')
   const slots = [...bars, ...bars, ...bars, ...finaleSlots]
-  return { n, phrase: phraseOfSticking(spec, slots, CUT), ...(note ? { note } : {}) }
+  return {
+    n,
+    phrase: phraseOfSticking(spec, slots, CUT),
+    ...(note ? { note } : {}),
+    // Page 13 is a single full-width column, one exercise per staff line.
+    at: { file: sourceFile(13), column: 0, row: n - 1, rows: 1 },
+  }
 }
 
 /** `n` strokes of the given tail shape, starting from `hand`. */
@@ -250,6 +342,8 @@ const page13: BookPage = {
   page: 13,
   title: 'Review of Short Roll Combinations',
   shape: 'Three bars of the pattern, then a bar of the roll figure alone.',
+  columns: 1,
+  lines: 12,
   exercises: [
     reviewExercise(1, 'R L R L', singlesAfter, P13_PATTERN, singlesFrom('R', 16), repeat('16', 16)),
     reviewExercise(2, 'L R L R', singlesAfter, P13_PATTERN, singlesFrom('L', 16), repeat('16', 16)),
@@ -302,6 +396,7 @@ const page13: BookPage = {
           n < 11
             ? 'Closed rolls, tied across the bar in the book. Ties are not modelled here, so it sounds as separate rolls.'
             : 'Closed rolls, written without ties.',
+        at: { file: sourceFile(13), column: 0, row: n - 1, rows: 1 },
       }
     }),
   ],
@@ -328,20 +423,25 @@ const page31: BookPage = {
   page: 31,
   title: 'Combinations in 3/8, continued',
   shape: 'Four sixteenths, then four thirty-seconds.',
+  columns: 2,
+  lines: 12,
   exercises: [
     ...P31_PLAIN.map((prefix, i) => ({
       n: i + 25,
       phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 4)}`, P31_SLOTS, THREE_EIGHT),
+      at: grid(31, 12)(i),
     })),
     ...P31_RESTED.map((prefix, i) => ({
       n: i + 36,
       phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 3)} -`, P31_SLOTS, THREE_EIGHT),
       note: 'The bar ends on a rest.',
+      at: grid(31, 12)(i + 11),
     })),
     ...P31_ROLLED.map((prefix, i) => ({
       n: i + 46,
       phrase: phraseOfSticking(`${prefix} ${doublesAfter(prefix, 4)}`, P31_SLOTS, THREE_EIGHT),
       note: i === 0 ? '5 stroke open roll.' : undefined,
+      at: grid(31, 12)(i + 21),
     })),
   ],
 }

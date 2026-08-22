@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { toNumber } from './fraction'
 import { barBeats, isRest, placedStrokes } from './phrase'
-import { BOOK_PAGES, BOOK_PAGES_BY_NUMBER } from './stickControl'
+import { ASSET_DIR, BOOK_PAGES, BOOK_PAGES_BY_NUMBER, sourceFile } from './stickControl'
 
 const handsOf = (page: number, n: number) =>
   placedStrokes(BOOK_PAGES_BY_NUMBER.get(page)!.exercises.find((e) => e.n === n)!.phrase)
@@ -110,5 +110,71 @@ describe('bars that end on a rest', () => {
     expect(events.filter(isRest)).toHaveLength(1)
     expect(isRest(events[11]!)).toBe(true)
     expect(placedStrokes(phrase)).toHaveLength(11)
+  })
+})
+
+/**
+ * A transcription is only worth as much as its traceability. If two exercises
+ * claim the same staff line, or a line nobody claims goes missing, then the
+ * mapping back to the photograph is wrong and a bad sticking becomes
+ * impossible to track down.
+ */
+describe('every exercise can be traced back to the page it was read from', () => {
+  it('names the image its own page number', () => {
+    for (const page of BOOK_PAGES) {
+      for (const exercise of page.exercises) {
+        expect(exercise.at.file, `page ${page.page} no. ${exercise.n}`).toBe(sourceFile(page.page))
+        expect(exercise.at.file).toContain(ASSET_DIR)
+      }
+    }
+  })
+
+  it('places every exercise inside the page it claims', () => {
+    for (const page of BOOK_PAGES) {
+      for (const { n, at } of page.exercises) {
+        expect(at.column, `page ${page.page} no. ${n}`).toBeGreaterThanOrEqual(0)
+        expect(at.column, `page ${page.page} no. ${n}`).toBeLessThan(page.columns)
+        expect(at.row, `page ${page.page} no. ${n}`).toBeGreaterThanOrEqual(0)
+        expect(at.row + at.rows, `page ${page.page} no. ${n}`).toBeLessThanOrEqual(page.lines)
+      }
+    }
+  })
+
+  it('never puts two exercises on the same staff line', () => {
+    for (const page of BOOK_PAGES) {
+      const taken = new Set<string>()
+      for (const { n, at } of page.exercises) {
+        for (let row = at.row; row < at.row + at.rows; row += 1) {
+          const key = `${at.column}:${row}`
+          expect(taken.has(key), `page ${page.page} no. ${n} collides at ${key}`).toBe(false)
+          taken.add(key)
+        }
+      }
+    }
+  })
+
+  it('accounts for every staff line printed on the page', () => {
+    // Page 9 is the one that matters here: nine exercises over twelve lines,
+    // because three of them print a mirror line underneath.
+    for (const page of BOOK_PAGES) {
+      const claimed = page.exercises.reduce((n, e) => n + e.at.rows, 0)
+      expect(claimed, `page ${page.page}`).toBe(page.columns * page.lines)
+    }
+  })
+
+  it('runs down each column in printed order', () => {
+    for (const page of BOOK_PAGES) {
+      const sorted = [...page.exercises].sort((a, b) => a.n - b.n)
+      let previous = -1
+      let column = 0
+      for (const { at } of sorted) {
+        if (at.column !== column) {
+          column = at.column
+          previous = -1
+        }
+        expect(at.row, `page ${page.page}`).toBeGreaterThan(previous)
+        previous = at.row
+      }
+    }
   })
 })
