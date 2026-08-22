@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useSpacebarToggle } from './useSpacebarToggle'
+import { useFollowActive } from './useFollowActive'
 import {
   EXERCISES,
   EXERCISES_BY_ID,
@@ -9,7 +10,7 @@ import {
 } from '../domain/exercises'
 import { usePractice } from './usePractice'
 import { useExerciseRun } from './useExerciseRun'
-import { Score } from './Score'
+import { ExerciseWorksheet } from './ExerciseWorksheet'
 import { InputPanel } from './InputPanel'
 import { ScorePanel } from './ScorePanel'
 
@@ -37,6 +38,10 @@ export function ExercisesPage() {
     [run.running, run.stop, run.start],
   )
   useSpacebarToggle(toggleExercise, !calibrating)
+
+  // The index mirrors the worksheet, so it follows along too — otherwise the
+  // highlighted step scrolls out of the left column on a long routine.
+  const indexItems = useFollowActive<HTMLLIElement>(run.index)
 
   return (
     <>
@@ -66,7 +71,13 @@ export function ExercisesPage() {
               const rudiment = rudimentForStep(step)
               const state = i === run.index ? 'is-current' : i < run.index ? 'is-done' : ''
               return (
-                <li key={`${step.rudimentId}-${i}`} className={state}>
+                <li
+                  key={`${step.rudimentId}-${i}`}
+                  className={state}
+                  ref={(element) => {
+                    indexItems.current[i] = element
+                  }}
+                >
                   <button type="button" onClick={() => run.jumpTo(i)}>
                     <span className="step-name">{rudiment.name}</span>
                     <span className="step-meta">
@@ -86,51 +97,60 @@ export function ExercisesPage() {
         </div>
       </aside>
 
-      <main className="col col-center">
-        <div className="stage">
-          <Score strokes={run.strokes} activeIndex={activeStroke} />
+      {/* The centre column is the sheet and nothing else; the transport pins
+          to its foot so Stop stays reachable however far down you have read. */}
+      <main className="col col-center col-sheet">
+        <ExerciseWorksheet
+          exercise={exercise}
+          index={run.index}
+          running={run.running}
+          cycles={run.cycles}
+          activeStroke={activeStroke}
+          onJump={run.jumpTo}
+        />
 
-          <div className="transport transport-stacked">
-            <button
-              type="button"
-              className="play"
-              onClick={toggleExercise}
-              disabled={calibrating}
-            >
-              {run.running ? 'Stop' : 'Start exercise'}
-            </button>
-            <p className="step-caption">
-              Step {run.index + 1} of {exercise.steps.length} ·{' '}
-              <strong>{run.rudiment.name}</strong> at <strong>{run.step.bpm}</strong> bpm ·{' '}
-              {run.running ? `${run.cycles}/${run.step.repeats}` : `${run.step.repeats}×`}
-            </p>
-            <p className="shortcut-hint">
-              <kbd>Space</kbd> to start and stop
-            </p>
-          </div>
+        <div className="sheet-transport">
+          <button type="button" className="play" onClick={toggleExercise} disabled={calibrating}>
+            {run.running ? 'Stop' : 'Start exercise'}
+          </button>
+          <p className="step-caption">
+            Step {run.index + 1} of {exercise.steps.length} · <strong>{run.rudiment.name}</strong>{' '}
+            at <strong>{run.step.bpm}</strong> bpm ·{' '}
+            {run.running ? `${run.cycles}/${run.step.repeats}` : `${run.step.repeats}×`}
+          </p>
+          <p className="shortcut-hint">
+            <kbd>Space</kbd> to start and stop
+          </p>
         </div>
-
-        <ScorePanel report={report} showSticking={input === 'keyboard'} />
       </main>
 
       <aside className="col col-right">
-        <InputPanel
-          input={input}
-          micStatus={micStatus}
-          micError={micError}
-          sensitivity={sensitivity}
-          getMeter={getMeter}
-          onUseKeyboard={useKeyboard}
-          onUseMicrophone={useMicrophone}
-          onSensitivity={setSensitivity}
-          metronome={metronome}
-          onMetronome={setMetronome}
-          calibrating={calibrating}
-          calibrationTaps={calibrationTaps}
-          onCalibrate={calibrate}
-          latencyMs={latencyMs}
-          onClearLatency={clearLatency}
-        />
+        <div className="panel-stack">
+          <InputPanel
+            input={input}
+            micStatus={micStatus}
+            micError={micError}
+            sensitivity={sensitivity}
+            getMeter={getMeter}
+            onUseKeyboard={useKeyboard}
+            onUseMicrophone={useMicrophone}
+            onSensitivity={setSensitivity}
+            metronome={metronome}
+            onMetronome={setMetronome}
+            calibrating={calibrating}
+            calibrationTaps={calibrationTaps}
+            onCalibrate={calibrate}
+            latencyMs={latencyMs}
+            onClearLatency={clearLatency}
+          />
+
+          {/* Moved out of the centre on this page: the sheet needs the whole
+              column, and the read-out belongs with the other read-outs. */}
+          <section className="panel-stack">
+            <p className="eyebrow">Your timing</p>
+            <ScorePanel report={report} showSticking={input === 'keyboard'} />
+          </section>
+        </div>
       </aside>
     </>
   )

@@ -377,6 +377,112 @@ select {
 .step-caption { margin: 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
 .step-caption strong { color: var(--fg); }
 
-/* The exercise transport stacks its caption under the button; the practice
-   page's transport stays a row with the tempo slider beside the button. */
-.transport-stacked { flex-direction: column; gap: 0.75rem; }
+/* ── Exercise worksheet ─────────────────────────────────────────────
+   The exercises page gives its whole centre column to the sheet: one stave
+   per step, scrolling, with the transport pinned to the foot of the column
+   so Stop stays reachable however far down the routine you have read. */
+.col-sheet {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0;
+  padding: 0;
+  /* The sheet inside does the scrolling; the transport is a grid row of its
+     own below it, so it needs no sticky positioning to stay put. */
+  overflow: hidden;
+}
+
+.worksheet { overflow-y: auto; padding: 1.5rem; }
+
+.sheet { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
+
+.sheet-row {
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+  background: var(--card);
+  overflow: hidden;
+  /* `scrollIntoView` honours scroll-margin, so a step being followed stops
+     flush against the edge of the column rather than touching it. */
+  scroll-margin: 1rem 0;
+}
+
+.sheet-row.is-current { border-color: var(--accent); }
+
+/* Read but not gone: a finished step stays legible so you can look back at
+   what you just played, it simply stops competing with the current one. */
+.sheet-row.is-done { opacity: 0.5; }
+.sheet-row.is-upcoming { opacity: 0.78; }
+
+.sheet-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sheet-head:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+.sheet-index {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.sheet-row.is-current .sheet-index {
+  border-color: transparent;
+  background: var(--accent);
+  color: #fff;
+}
+
+.sheet-name { font-weight: 500; }
+.sheet-row.is-current .sheet-name { font-weight: 600; }
+.sheet-meta { margin-left: auto; color: var(--muted); font-size: 0.75rem; white-space: nowrap; }
+
+.sheet-row .score { padding: 0 0.5rem; }
+
+/* One hairline per row rather than a bar: enough to read progress at a
+   glance without another rectangle competing with the notation. */
+.sheet-bar { height: 2px; background: var(--line); }
+
+.sheet-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 140ms linear;
+}
+
+.sheet-transport {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.sheet-transport .step-caption { flex: 1; text-align: left; }
+.sheet-transport .shortcut-hint { margin: 0; }
+
+/* Narrow screens, continued: these must come after the worksheet rules above,
+   not in the earlier media block. Both are single-class selectors, so at equal
+   specificity it is source order that decides which wins. */
+@media (max-width: 60rem) {
+  /* One page-level scroll on a phone rather than a scroller inside a
+     scroller, which traps the gesture and hides the transport off-screen. */
+  .col-sheet { display: block; overflow: visible; }
+  .worksheet { overflow: visible; padding: 1.5rem; }
+  .sheet-transport { position: sticky; bottom: 0; }
+}

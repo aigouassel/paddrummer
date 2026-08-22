@@ -33,6 +33,12 @@ Two pages, routed on the URL hash: **Practice** (one rudiment, your tempo) and
 themselves). Both use the same three-column layout and share a single audio
 engine, so calibration and input choice survive navigating between them.
 
+Exercises reads as a worksheet: every step of the routine is engraved down the
+centre column, so the shape of the routine is visible before you start and the
+playhead travels down it as the routine advances. The staves are engraved once
+per exercise, not per frame — the `strokes` arrays are built in a single memo
+so `Score`'s effect never re-runs while playing.
+
 Two rules hold this together:
 
 1. **`domain/` never imports a browser API.** Rendering, playback and scoring
