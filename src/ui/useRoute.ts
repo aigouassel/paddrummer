@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
-export const ROUTES = ['practice', 'exercises'] as const
+export const ROUTES = ['practice', 'exercises', 'stick-control'] as const
 export type Route = (typeof ROUTES)[number]
 
 const DEFAULT: Route = 'practice'

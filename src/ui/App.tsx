@@ -1,11 +1,13 @@
 import { EngineProvider } from './EngineContext'
 import { PracticePage } from './PracticePage'
 import { ExercisesPage } from './ExercisesPage'
+import { StickControlPage } from './StickControlPage'
 import { ROUTES, useRoute, type Route } from './useRoute'
 
 const LABELS: Record<Route, string> = {
   practice: 'Practice',
   exercises: 'Exercises',
+  'stick-control': 'Stick Control',
 }
 
 /**
@@ -38,7 +40,13 @@ export function App() {
           </nav>
         </header>
 
-        {route === 'exercises' ? <ExercisesPage /> : <PracticePage />}
+        {route === 'exercises' ? (
+          <ExercisesPage />
+        ) : route === 'stick-control' ? (
+          <StickControlPage />
+        ) : (
+          <PracticePage />
+        )}
       </div>
     </EngineProvider>
   )

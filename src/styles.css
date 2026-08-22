@@ -474,6 +474,19 @@ select {
 }
 
 .sheet-transport .step-caption { flex: 1; text-align: left; }
+.sheet-transport .tempo { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--muted); }
+.sheet-transport .tempo strong { color: var(--fg); font-variant-numeric: tabular-nums; }
+.sheet-transport .tempo input { width: 9rem; }
+
+/* The book page number, so the left column reads like a contents page. */
+.book-page-no {
+  display: inline-block;
+  min-width: 2.2rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.catalogue li.is-selected .book-page-no { color: var(--accent); }
 .sheet-transport .shortcut-hint { margin: 0; }
 
 /* Title block at the head of the sheet, so the routine reads like a page of

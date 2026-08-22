@@ -117,6 +117,59 @@ export function line(
   return { hand, events }
 }
 
+const STICK = /^([rl]*)(>?)(~?)([RL])$/
+
+/**
+ * Reads a written-out sticking, rests included, as a single-line phrase.
+ *
+ * `sticking` in `pattern.ts` covers rudiments, where every slot is struck.
+ * Exercise books are not so tidy: a bar can end in a rest, and a roll can be
+ * written as one sustained buzz. So this parser adds `-` for a rest and `~`
+ * for a buzzed stroke, and takes a duration per slot.
+ *
+ *   phraseOfSticking('R L R L -', ['8','8','8','8','8'])
+ *   phraseOfSticking('R L R L ~R', ['8','8','8','8','h'])
+ */
+export function phraseOfSticking(
+  spec: string,
+  duration: Duration | readonly Duration[],
+  meter: Meter | null = null,
+): Phrase {
+  const perSlot: readonly Duration[] | null =
+    Array.isArray(duration) && !isFraction(duration) ? (duration as readonly Duration[]) : null
+  const uniform = perSlot ? null : (duration as Duration)
+
+  const tokens = spec.trim().split(/\s+/).filter((token) => token !== '|')
+
+  const events = tokens.map((token, index): LineEvent => {
+    const slot = perSlot ? perSlot[index] : uniform
+    if (slot == null) {
+      throw new Error(`phraseOfSticking: no duration for slot ${index} of "${spec}"`)
+    }
+    if (token === '-') return { rest: true, duration: slot }
+
+    const match = STICK.exec(token)
+    if (!match) throw new Error(`phraseOfSticking: cannot parse "${token}" in "${spec}"`)
+    const [, graceLetters = '', accent = '', buzz = '', handLetter = 'R'] = match
+    const hand = handLetter as Hand
+
+    const stroke: Stroke = { hand, duration: slot }
+    if (graceLetters) stroke.grace = graceLetters.split('').map(() => otherHand(hand))
+    if (accent) stroke.accent = true
+    if (buzz) stroke.buzz = true
+    return stroke
+  })
+
+  const first = events.find((event) => !isRest(event))
+  if (!first) throw new Error(`phraseOfSticking: "${spec}" has no strokes`)
+
+  return {
+    meter,
+    lines: [{ hand: (first as Stroke).hand, events }],
+    beats: sum(events.map((event) => toBeats(event.duration))),
+  }
+}
+
 /** A rudiment as a phrase: one line, no bar, no rests. */
 export const phraseOfStrokes = (strokes: readonly Stroke[]): Phrase => ({
   meter: null,
