@@ -9,26 +9,29 @@ const handsOf = (page: number, n: number) =>
     .join('')
 
 describe('the transcribed pages', () => {
-  it('numbers every exercise contiguously from one', () => {
+  it('numbers every exercise contiguously, from wherever the page starts', () => {
+    // A section can run across several pages, so page 31 picks up at 25 where
+    // page 30 left off — but within a page the numbering never skips.
     for (const page of BOOK_PAGES) {
       const numbers = page.exercises.map((e) => e.n)
+      const first = numbers[0]!
       expect(numbers, `page ${page.page}`).toEqual(
-        Array.from({ length: numbers.length }, (_, i) => i + 1),
+        Array.from({ length: numbers.length }, (_, i) => first + i),
       )
     }
   })
 
-  it('fills exactly one bar of its own metre', () => {
+  it('fills a whole number of bars of its own metre', () => {
     // The strongest check available on a transcription: if a duration template
-    // were wrong, the bar would not add up.
+    // were wrong, the bars would not add up.
     for (const page of BOOK_PAGES) {
       for (const exercise of page.exercises) {
         const meter = exercise.phrase.meter!
         expect(meter, `page ${page.page} no. ${exercise.n}`).not.toBeNull()
-        expect(
-          toNumber(exercise.phrase.beats),
-          `page ${page.page} no. ${exercise.n}`,
-        ).toBeCloseTo(toNumber(barBeats(meter)), 9)
+        const bars = toNumber(exercise.phrase.beats) / toNumber(barBeats(meter))
+        expect(Math.abs(bars - Math.round(bars)), `page ${page.page} no. ${exercise.n}`)
+          .toBeLessThan(1e-9)
+        expect(bars, `page ${page.page} no. ${exercise.n}`).toBeGreaterThan(0)
       }
     }
   })

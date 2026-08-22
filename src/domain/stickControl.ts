@@ -204,7 +204,151 @@ const page30: BookPage = {
   ],
 }
 
-export const BOOK_PAGES: readonly BookPage[] = [page9, page10, page11, page12, page30]
+// ── page 13 — Review of Short Roll Combinations ─────────────────────
+//
+// Four bars rather than one: three of the pattern, then a bar given over
+// entirely to the roll figure. Written out bar by bar because the fourth bar
+// is not a continuation of the first three.
+
+const P13_PATTERN: Duration[] = [...repeat('8', 4), ...repeat('16', 8)]
+const P13_PATTERN_REST: Duration[] = [...repeat('8', 4), ...repeat('16', 8)]
+const P13_ROLL_BAR: Duration[] = [...repeat('8', 4), 'h']
+
+/** Three bars of the pattern, then a fourth built from `finale`. */
+function reviewExercise(
+  n: number,
+  prefix: string,
+  tail: (from: string, count: number) => string,
+  bars: Duration[],
+  finaleSpec: string,
+  finaleSlots: Duration[],
+  note?: string,
+): BookExercise {
+  const one = `${prefix} ${tail(prefix, bars.length - 4)}`
+  const spec = [one, one, one, finaleSpec].join(' ')
+  const slots = [...bars, ...bars, ...bars, ...finaleSlots]
+  return { n, phrase: phraseOfSticking(spec, slots, CUT), ...(note ? { note } : {}) }
+}
+
+/** `n` strokes of the given tail shape, starting from `hand`. */
+const runFrom = (hand: Hand, n: number, shape: (h: Hand, i: number) => Hand): string => {
+  const out: string[] = []
+  let current = hand
+  for (let i = 0; i < n; i += 1) {
+    out.push(current)
+    current = shape(current, i)
+  }
+  return out.join(' ')
+}
+
+const singlesFrom = (hand: Hand, n: number) => runFrom(hand, n, (h) => other(h))
+const doublesFrom = (hand: Hand, n: number) => runFrom(hand, n, (h, i) => (i % 2 === 1 ? other(h) : h))
+
+const restEvery8 = (body: string) => `${body} -`
+
+const page13: BookPage = {
+  page: 13,
+  title: 'Review of Short Roll Combinations',
+  shape: 'Three bars of the pattern, then a bar of the roll figure alone.',
+  exercises: [
+    reviewExercise(1, 'R L R L', singlesAfter, P13_PATTERN, singlesFrom('R', 16), repeat('16', 16)),
+    reviewExercise(2, 'L R L R', singlesAfter, P13_PATTERN, singlesFrom('L', 16), repeat('16', 16)),
+    reviewExercise(
+      3, 'R L R L',
+      (from, count) => `${singlesAfter(from, count - 1)} -`,
+      P13_PATTERN_REST,
+      `${restEvery8(singlesFrom('R', 7))} ${restEvery8(singlesFrom('R', 7))}`,
+      repeat('16', 16),
+      'Each half-bar ends on a rest.',
+    ),
+    reviewExercise(
+      4, 'L R L R',
+      (from, count) => `${singlesAfter(from, count - 1)} -`,
+      P13_PATTERN_REST,
+      `${restEvery8(singlesFrom('L', 7))} ${restEvery8(singlesFrom('L', 7))}`,
+      repeat('16', 16),
+      'Each half-bar ends on a rest.',
+    ),
+    reviewExercise(5, 'R L R L', doublesAfter, P13_PATTERN, doublesFrom('R', 16), repeat('16', 16)),
+    reviewExercise(6, 'L R L R', doublesAfter, P13_PATTERN, doublesFrom('L', 16), repeat('16', 16)),
+    reviewExercise(
+      7, 'R L R L',
+      (from, count) => `${doublesAfter(from, count - 1)} -`,
+      P13_PATTERN_REST,
+      `${restEvery8(doublesFrom('R', 7))} ${restEvery8(doublesFrom('R', 7))}`,
+      repeat('16', 16),
+      'Each half-bar ends on a rest.',
+    ),
+    reviewExercise(
+      8, 'L R L R',
+      (from, count) => `${doublesAfter(from, count - 1)} -`,
+      P13_PATTERN_REST,
+      `${restEvery8(doublesFrom('L', 7))} ${restEvery8(doublesFrom('L', 7))}`,
+      repeat('16', 16),
+      'Each half-bar ends on a rest.',
+    ),
+    ...([9, 10, 11, 12] as const).map((n) => {
+      const lead = n % 2 === 1 ? 'R L R L' : 'L R L R'
+      const rollHand = n % 2 === 1 ? 'R' : 'L'
+      const one = `${lead} ~${rollHand}`
+      return {
+        n,
+        phrase: phraseOfSticking(
+          [one, one, one, `~${rollHand} ~${rollHand}`].join(' '),
+          [...P13_ROLL_BAR, ...P13_ROLL_BAR, ...P13_ROLL_BAR, 'h', 'h'],
+          CUT,
+        ),
+        note:
+          n < 11
+            ? 'Closed rolls, tied across the bar in the book. Ties are not modelled here, so it sounds as separate rolls.'
+            : 'Closed rolls, written without ties.',
+      }
+    }),
+  ],
+}
+
+// ── page 31 — Combinations in 3/8, continued ────────────────────────
+//
+// A finer subdivision than page 30: four sixteenths then four thirty-seconds,
+// still one bar of 3/8.
+
+const P31_SLOTS: Duration[] = [...repeat('16', 4), ...repeat('32', 4)]
+
+const P31_PLAIN = [
+  'R L R L', 'L R L R', 'R R L L', 'L L R R', 'R L R R', 'R L L R',
+  'R L L L', 'L R R R', 'R R R L', 'L L L R', 'R R R R',
+]
+const P31_RESTED = [
+  'R L R L', 'L R L R', 'R R L L', 'L L R R', 'R L R R',
+  'R L L R', 'R L L L', 'L R R R', 'R R R L', 'L L L R',
+]
+const P31_ROLLED = ['R L R L', 'L R L R', 'R R L L']
+
+const page31: BookPage = {
+  page: 31,
+  title: 'Combinations in 3/8, continued',
+  shape: 'Four sixteenths, then four thirty-seconds.',
+  exercises: [
+    ...P31_PLAIN.map((prefix, i) => ({
+      n: i + 25,
+      phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 4)}`, P31_SLOTS, THREE_EIGHT),
+    })),
+    ...P31_RESTED.map((prefix, i) => ({
+      n: i + 36,
+      phrase: phraseOfSticking(`${prefix} ${singlesAfter(prefix, 3)} -`, P31_SLOTS, THREE_EIGHT),
+      note: 'The bar ends on a rest.',
+    })),
+    ...P31_ROLLED.map((prefix, i) => ({
+      n: i + 46,
+      phrase: phraseOfSticking(`${prefix} ${doublesAfter(prefix, 4)}`, P31_SLOTS, THREE_EIGHT),
+      note: i === 0 ? '5 stroke open roll.' : undefined,
+    })),
+  ],
+}
+
+export const BOOK_PAGES: readonly BookPage[] = [
+  page9, page10, page11, page12, page13, page30, page31,
+]
 
 export const BOOK_PAGES_BY_NUMBER: ReadonlyMap<number, BookPage> = new Map(
   BOOK_PAGES.map((page) => [page.page, page]),
