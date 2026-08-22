@@ -1,5 +1,5 @@
 import { toNumber } from '../domain/fraction'
-import { type Stroke, totalBeats } from '../domain/pattern'
+import { type Phrase, phraseOfStrokes } from '../domain/phrase'
 import { type TimedNote, toTimeline } from '../domain/timeline'
 
 /**
@@ -29,7 +29,7 @@ export class Sequencer {
   private cycle: TimedNote[] = []
   private cycleSec = 0
   private tempo = 100
-  private strokes: readonly Stroke[] = []
+  private phrase: Phrase = phraseOfStrokes([])
   private cycleStartSec = 0
   private index = 0
   private playing = false
@@ -49,8 +49,8 @@ export class Sequencer {
     return this.cycleSec
   }
 
-  setPattern(strokes: readonly Stroke[]): void {
-    this.strokes = strokes
+  setPattern(phrase: Phrase): void {
+    this.phrase = phrase
     this.reanchor(() => this.rebuild())
   }
 
@@ -112,8 +112,8 @@ export class Sequencer {
   }
 
   private rebuild(): void {
-    this.cycle = toTimeline(this.strokes, this.tempo)
-    this.cycleSec = (toNumber(totalBeats(this.strokes)) * 60) / this.tempo
+    this.cycle = toTimeline(this.phrase, this.tempo)
+    this.cycleSec = (toNumber(this.phrase.beats) * 60) / this.tempo
   }
 
   /**

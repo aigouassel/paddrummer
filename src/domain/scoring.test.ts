@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_WINDOWS, estimateLatency, judge, median, type Hit } from './scoring'
+import { phraseOfStrokes } from './phrase'
 import { expectedHits } from './timeline'
 import { fullCycle, sticking } from './pattern'
 import { RUDIMENTS_BY_ID } from './rudiments'
 
-const paradiddle = () => expectedHits(fullCycle(RUDIMENTS_BY_ID.get('single-paradiddle')!), 120)
+const paradiddle = () => expectedHits(phraseOfStrokes(fullCycle(RUDIMENTS_BY_ID.get('single-paradiddle')!)), 120)
 
 /** Plays the pattern exactly, optionally shifted by a constant. */
 const perfectRun = (offsetSec = 0): Hit[] =>
@@ -118,7 +119,7 @@ describe('judge', () => {
 
   it('ignores grace notes as targets', () => {
     // A flam is one target even though two notes sound.
-    const flams = expectedHits(fullCycle(RUDIMENTS_BY_ID.get('flam-tap')!), 100)
+    const flams = expectedHits(phraseOfStrokes(fullCycle(RUDIMENTS_BY_ID.get('flam-tap')!)), 100)
     expect(flams).toHaveLength(4)
     const { summary } = judge(flams, flams.map((e) => ({ timeSec: e.timeSec, hand: e.hand })))
     expect(summary.perfect).toBe(4)

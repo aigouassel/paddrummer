@@ -1,14 +1,18 @@
-import { type Fraction, ZERO, add, toNumber } from './fraction'
-import { toBeats } from './duration'
-import type { Hand, Stroke } from './pattern'
+import { toNumber } from './fraction'
+import type { Hand } from './pattern'
+import { type Phrase, placedStrokes } from './phrase'
 
 /**
  * A single sounding note, placed in time.
  *
- * Note the split: `strokeIndex` says which Stroke this note belongs to, and
+ * Note the split: `strokeIndex` says which stroke this note belongs to, and
  * `kind` says whether it is the note the player aims at or one of its
  * ornaments. Scoring only ever looks at `kind === 'main'`; the audio engine
  * plays both.
+ *
+ * `strokeIndex` counts through the phrase in playing order, across both hands
+ * when there are two — the same order the notation layer numbers its notes in,
+ * so the playhead and the scorer agree without either knowing about lines.
  */
 export type TimedNote = {
   timeSec: number
@@ -37,7 +41,7 @@ export type TimelineOptions = {
 }
 
 export function toTimeline(
-  strokes: readonly Stroke[],
+  phrase: Phrase,
   bpm: number,
   options: TimelineOptions = {},
 ): TimedNote[] {
@@ -47,12 +51,11 @@ export function toTimeline(
   const secondsPerBeat = 60 / bpm
   const notes: TimedNote[] = []
 
-  // Position accumulates as an exact fraction and is converted to seconds
-  // once per stroke, so a long pattern of triplets cannot drift.
-  let position: Fraction = ZERO
-
-  strokes.forEach((stroke, strokeIndex) => {
-    const timeSec = startSec + toNumber(position) * secondsPerBeat
+  // Each stroke already carries its position as an exact fraction of a beat,
+  // converted to seconds once, here. Nothing accumulates in floating point, so
+  // a long pattern of triplets cannot drift out of line with the metronome.
+  placedStrokes(phrase).forEach(({ stroke, atBeat }, strokeIndex) => {
+    const timeSec = startSec + toNumber(atBeat) * secondsPerBeat
     const accent = stroke.accent ?? false
     const buzz = stroke.buzz ?? false
 
@@ -73,10 +76,11 @@ export function toTimeline(
     })
 
     notes.push({ timeSec, hand: stroke.hand, kind: 'main', accent, buzz, strokeIndex })
-    position = add(position, toBeats(stroke.duration))
   })
 
-  return notes
+  // Two hands are merged by beat, but a grace note is pushed *earlier* than
+  // its main note, so emission order is not time order once ornaments exist.
+  return notes.sort((a, b) => a.timeSec - b.timeSec)
 }
 
 /** A note the player is expected to hit, and with which hand. */
@@ -93,11 +97,11 @@ export type ExpectedHit = {
  * marked down for the placement of a flam's grace note.
  */
 export const expectedHits = (
-  strokes: readonly Stroke[],
+  phrase: Phrase,
   bpm: number,
   options: TimelineOptions = {},
 ): ExpectedHit[] =>
-  toTimeline(strokes, bpm, options)
+  toTimeline(phrase, bpm, options)
     .filter((note) => note.kind === 'main')
     .map((note) => ({
       strokeIndex: note.strokeIndex,
@@ -110,10 +114,10 @@ export const expectedHits = (
  * Just the times, for callers that do not care which hand.
  */
 export const expectedHitTimes = (
-  strokes: readonly Stroke[],
+  phrase: Phrase,
   bpm: number,
   options: TimelineOptions = {},
 ): number[] =>
-  toTimeline(strokes, bpm, options)
+  toTimeline(phrase, bpm, options)
     .filter((note) => note.kind === 'main')
     .map((note) => note.timeSec)

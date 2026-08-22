@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { Sequencer } from './sequencer'
+import { phraseOfStrokes } from '../domain/phrase'
 import { sticking } from '../domain/pattern'
 import type { TimedNote } from '../domain/timeline'
 
@@ -15,7 +16,7 @@ describe('Sequencer', () => {
 
   beforeEach(() => {
     seq = new Sequencer(0.12)
-    seq.setPattern(sticking('R L R R')) // four 16ths
+    seq.setPattern(phraseOfStrokes(sticking('R L R R'))) // four 16ths
     seq.setTempo(120) // 0.5s per beat, so 0.125s per note, 0.5s per cycle
   })
 
@@ -35,7 +36,7 @@ describe('Sequencer', () => {
     seq.start(0)
     const dense = drive(seq, 0, 2, 0.001)
     const sparse = new Sequencer(0.12)
-    sparse.setPattern(sticking('R L R R'))
+    sparse.setPattern(phraseOfStrokes(sticking('R L R R')))
     sparse.setTempo(120)
     sparse.start(0)
     const coarse = drive(sparse, 0, 2, 0.05)
@@ -51,7 +52,7 @@ describe('Sequencer', () => {
   })
 
   it('emits in non-decreasing time order', () => {
-    seq.setPattern(sticking('l>R L r>L R')) // flams, whose grace notes precede the beat
+    seq.setPattern(phraseOfStrokes(sticking('l>R L r>L R'))) // flams, whose grace notes precede the beat
     seq.start(0)
     const times = drive(seq, 0, 2).map((n) => n.timeSec)
     expect([...times].sort((a, b) => a - b)).toEqual(times)
@@ -72,7 +73,7 @@ describe('Sequencer', () => {
 describe('tempo changes mid-loop', () => {
   it('does not move the note already queued next', () => {
     const seq = new Sequencer(0.12)
-    seq.setPattern(sticking('R L R R'))
+    seq.setPattern(phraseOfStrokes(sticking('R L R R')))
     seq.setTempo(120)
     seq.start(0)
     drive(seq, 0, 0.2)
@@ -84,7 +85,7 @@ describe('tempo changes mid-loop', () => {
 
   it('applies the new tempo to the notes after it', () => {
     const seq = new Sequencer(0.12)
-    seq.setPattern(sticking('R L R R'))
+    seq.setPattern(phraseOfStrokes(sticking('R L R R')))
     seq.setTempo(120)
     seq.start(0)
     drive(seq, 0, 0.2)
@@ -97,7 +98,7 @@ describe('tempo changes mid-loop', () => {
 
   it('never emits a note twice across a tempo change', () => {
     const seq = new Sequencer(0.12)
-    seq.setPattern(sticking('R L R R'))
+    seq.setPattern(phraseOfStrokes(sticking('R L R R')))
     seq.setTempo(120)
     seq.start(0)
     const all = [...drive(seq, 0, 0.3)]
@@ -114,7 +115,7 @@ describe('tempo changes mid-loop', () => {
 describe('cycle duration', () => {
   it('reports a full pass at the current tempo', () => {
     const seq = new Sequencer()
-    seq.setPattern(sticking('R L R R')) // one beat
+    seq.setPattern(phraseOfStrokes(sticking('R L R R'))) // one beat
     seq.setTempo(60)
     expect(seq.cycleDurationSec).toBeCloseTo(1, 10)
     seq.setTempo(120)

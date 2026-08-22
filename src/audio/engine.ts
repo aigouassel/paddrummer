@@ -1,5 +1,6 @@
 import { QUARTER } from '../domain/duration'
-import { type Stroke, sticking } from '../domain/pattern'
+import type { Fraction } from '../domain/fraction'
+import { type Phrase, phraseOfStrokes, placedStrokes } from '../domain/phrase'
 import {
   DEFAULT_WINDOWS,
   type Hit,
@@ -56,7 +57,13 @@ export class PracticeEngine {
   private readonly notes = new Sequencer()
   private readonly beats = new Sequencer()
   private timer: ReturnType<typeof setInterval> | null = null
-  private strokes: readonly Stroke[] = []
+  private phrase: Phrase = phraseOfStrokes([])
+  /**
+   * Metronome beats in a bar, so the click can mark the downbeat. Four unless
+   * the phrase says otherwise — an odd-metre pattern is unlearnable against a
+   * click that accents every fourth beat while the bar is seven long.
+   */
+  private beatsPerBar = 4
   private metronomeOn = true
   private beatCount = 0
   private startedAtSec = 0
@@ -105,7 +112,7 @@ export class PracticeEngine {
   constructor() {
     // The metronome is just a second sequencer playing one note per beat, so
     // it stays locked to the same clock and the same tempo changes for free.
-    this.beats.setPattern(sticking('R', QUARTER))
+    this.setClick(null)
     this.useKeyboard()
     this.emit()
   }
@@ -237,11 +244,25 @@ export class PracticeEngine {
     this.emit()
   }
 
-  setPattern(strokes: readonly Stroke[]): void {
-    this.strokes = strokes
-    this.notes.setPattern(strokes)
+  setPattern(phrase: Phrase): void {
+    this.phrase = phrase
+    this.notes.setPattern(phrase)
+    this.setClick(phrase.meter)
     this.clearHistory()
     this.emit()
+  }
+
+  /**
+   * Points the metronome at the phrase's meter.
+   *
+   * The click counts in the meter's own unit, not always in quarters: 7/8 is
+   * seven eighth notes, and a click plodding along in quarters would land on
+   * the downbeat only every other bar.
+   */
+  private setClick(meter: Phrase['meter']): void {
+    const unit: Fraction = meter ? [4, meter[1]] : QUARTER
+    this.beatsPerBar = meter ? meter[0] : 4
+    this.beats.setPattern(phraseOfStrokes([{ hand: 'R', duration: unit }]))
   }
 
   setTempo(bpm: number): void {
@@ -270,7 +291,7 @@ export class PracticeEngine {
    * on page load is not something the platform allows.
    */
   async start(mode: EngineMode = 'practice'): Promise<void> {
-    if (mode === 'practice' && this.strokes.length === 0) return
+    if (mode === 'practice' && placedStrokes(this.phrase).length === 0) return
 
     await this.ensureAudio()
     this.mode = mode
@@ -406,7 +427,7 @@ export class PracticeEngine {
     this.beats.tick(now, (beat) => {
       // During calibration the click is the reference, so it always sounds.
       if (this.metronomeOn || this.mode === 'calibrating') {
-        kit.click(beat.timeSec, this.beatCount % 4 === 0)
+        kit.click(beat.timeSec, this.beatCount % this.beatsPerBar === 0)
       }
       if (this.mode === 'calibrating') this.clickTimes.push(beat.timeSec)
       this.beatCount += 1

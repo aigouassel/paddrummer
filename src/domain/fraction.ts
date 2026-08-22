@@ -35,3 +35,10 @@ export const equals = (a: Fraction, b: Fraction): boolean => a[0] * b[1] === b[0
 
 /** The one lossy operation. Call it as late as possible. */
 export const toNumber = (f: Fraction): number => f[0] / f[1]
+
+/**
+ * Orders two fractions. Cross-multiplied rather than compared as floats:
+ * sorting two hands onto one timeline must put 1/3 and 2/6 in a stable order,
+ * and float division can make equal values compare unequal.
+ */
+export const compare = (a: Fraction, b: Fraction): number => a[0] * b[1] - b[0] * a[1]
