@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
+import { useSpacebarToggle } from './useSpacebarToggle'
 import {
   EXERCISES,
   EXERCISES_BY_ID,
@@ -30,6 +31,12 @@ export function ExercisesPage() {
   } = usePractice(run.rudiment)
 
   const calibrating = mode === 'calibrating'
+
+  const toggleExercise = useCallback(
+    () => (run.running ? run.stop() : run.start()),
+    [run.running, run.stop, run.start],
+  )
+  useSpacebarToggle(toggleExercise, !calibrating)
 
   return (
     <>
@@ -87,7 +94,7 @@ export function ExercisesPage() {
             <button
               type="button"
               className="play"
-              onClick={run.running ? run.stop : run.start}
+              onClick={toggleExercise}
               disabled={calibrating}
             >
               {run.running ? 'Stop' : 'Start exercise'}
@@ -96,6 +103,9 @@ export function ExercisesPage() {
               Step {run.index + 1} of {exercise.steps.length} ·{' '}
               <strong>{run.rudiment.name}</strong> at <strong>{run.step.bpm}</strong> bpm ·{' '}
               {run.running ? `${run.cycles}/${run.step.repeats}` : `${run.step.repeats}×`}
+            </p>
+            <p className="shortcut-hint">
+              <kbd>Space</kbd> to start and stop
             </p>
           </div>
         </div>

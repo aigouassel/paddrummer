@@ -62,6 +62,14 @@ yarn typecheck  # tsc --noEmit
 - [ ] 6b. `ProgressStore`: records, streaks, tempo history
 - [ ] 7. *(v2)* Hono + Postgres backend for accounts and cross-device sync
 
+## Keys
+
+| Key | Does |
+| --- | --- |
+| `Space` | Start / stop, on either page |
+| `F` | Left-hand strike |
+| `J` | Right-hand strike |
+
 ## Playing with a microphone
 
 Wear headphones. The microphone cannot tell your sticks from the metronome, so

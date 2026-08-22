@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSpacebarToggle } from './useSpacebarToggle'
 import { RUDIMENTS_BY_ID } from '../domain/rudiments'
 import { CALIBRATION_BEATS } from '../audio/engine'
 import { usePractice } from './usePractice'
@@ -22,6 +23,10 @@ export function PracticePage() {
   } = usePractice(rudiment)
 
   const calibrating = mode === 'calibrating'
+
+  // Not during calibration: the transport is disabled then, and the player is
+  // busy tapping along to the click.
+  useSpacebarToggle(toggle, !calibrating)
 
   return (
     <>
