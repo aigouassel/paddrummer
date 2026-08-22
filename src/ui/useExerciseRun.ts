@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useEngine } from './EngineContext'
-import { fullCycle } from '../domain/pattern'
-import { rudimentForStep, type Exercise } from '../domain/exercises'
+import { pieceForStep, type Exercise } from '../domain/exercises'
 
 /** How often to check whether the current step has finished. */
 const POLL_MS = 120
@@ -21,14 +20,16 @@ export function useExerciseRun(exercise: Exercise) {
   const [cycles, setCycles] = useState(0)
 
   const step = exercise.steps[Math.min(index, exercise.steps.length - 1)]!
-  const rudiment = useMemo(() => rudimentForStep(step), [step])
-  const strokes = useMemo(() => fullCycle(rudiment), [rudiment])
+  // Memoised on the step, which is stable for the life of the exercise.
+  // `pieceForStep` builds a fresh phrase each call for rudiments, and an
+  // unstable phrase would re-engrave the stave on every render.
+  const piece = useMemo(() => pieceForStep(step), [step])
 
   const playStep = useCallback(
     (at: number) => {
       const next = exercise.steps[at]
       if (!next) return
-      engine.setPattern(fullCycle(rudimentForStep(next)))
+      engine.setPattern(pieceForStep(next).phrase)
       engine.setTempo(next.bpm)
       void engine.start()
     },
@@ -81,15 +82,14 @@ export function useExerciseRun(exercise: Exercise) {
       setIndex(at)
       setCycles(0)
       if (running) playStep(at)
-      else engine.setPattern(fullCycle(rudimentForStep(exercise.steps[at]!)))
+      else engine.setPattern(pieceForStep(exercise.steps[at]!).phrase)
     },
     [running, playStep, engine, exercise],
   )
 
   return {
     step,
-    rudiment,
-    strokes,
+    piece,
     index,
     running,
     cycles: Math.min(cycles, step.repeats),

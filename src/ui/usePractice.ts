@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import { useEngine } from './EngineContext'
-import { fullCycle, type Rudiment } from '../domain/pattern'
+import type { Phrase } from '../domain/phrase'
 import type { ScoreReport } from '../domain/scoring'
 
 /** How often the score read-out refreshes. Fast enough to feel live, slow
@@ -19,23 +19,22 @@ const REPORT_MS = 100
  * because notes are scheduled up to 120ms *before* they sound. The engine
  * knows what will play; only the audio clock knows what is playing now.
  */
-export function usePractice(rudiment: Rudiment) {
+export function usePractice(phrase: Phrase) {
   const engine = useEngine()
 
   const state = useSyncExternalStore(engine.subscribe, engine.getState)
   const [activeStroke, setActiveStroke] = useState(-1)
   const [report, setReport] = useState<ScoreReport | null>(null)
 
-  // Memoised because identity matters downstream: Score re-engraves the whole
-  // stave whenever this array changes, and a fresh array every render would
-  // mean a full VexFlow layout pass on every score update.
-  const strokes = useMemo(() => fullCycle(rudiment), [rudiment])
-
+  // The phrase arrives already memoised by the caller, because identity
+  // matters downstream: Score re-engraves the whole stave whenever it changes,
+  // and a fresh object every render would mean a full VexFlow layout pass on
+  // every score update.
   useEffect(() => {
-    engine.setPattern(strokes)
+    engine.setPattern(phrase)
     setActiveStroke(-1)
     setReport(null)
-  }, [engine, strokes])
+  }, [engine, phrase])
 
   // Leaving a page stops its audio. The engine outlives the page, so without
   // this the metronome carries on from a page that has no Stop button on it.
@@ -71,7 +70,7 @@ export function usePractice(rudiment: Rudiment) {
 
   return {
     ...state,
-    strokes,
+    phrase,
     activeStroke,
     report,
     toggle,

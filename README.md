@@ -19,11 +19,13 @@ metronome while the app listens to your pad through the microphone.
 
 ```
 src/
-  domain/     Pure TypeScript. No browser APIs. The rudiments and exercises as
-              data, pattern expansion, and hit scoring. Fully unit-testable.
+  domain/     Pure TypeScript. No browser APIs. The rudiments, studies and
+              exercises as data, phrase expansion, and hit scoring. A Phrase is
+              the currency: one line for a rudiment, two for hand
+              independence. Fully unit-testable.
   audio/      AudioContext, lookahead scheduler, click voice.
   input/      HitSource port: KeyboardHitSource | MicHitSource.
-  notation/   Adapter from a domain Pattern to a VexFlow stave.
+  notation/   Adapter from a domain Phrase to a VexFlow stave, one voice or two.
   storage/    ProgressStore interface + localStorage implementation.
   ui/         React components, one file per page plus the shared panels.
 ```
@@ -36,8 +38,23 @@ engine, so calibration and input choice survive navigating between them.
 Exercises reads as a worksheet: every step of the routine is engraved down the
 centre column, so the shape of the routine is visible before you start and the
 playhead travels down it as the routine advances. The staves are engraved once
-per exercise, not per frame — the `strokes` arrays are built in a single memo
-so `Score`'s effect never re-runs while playing.
+per exercise, not per frame — the phrases are built in a single memo so
+`Score`'s effect never re-runs while playing.
+
+Exercises are filed by level (beginner, intermediate, advanced) and, within a
+level, by category. Levels are advisory: they exist so the list can be narrowed
+to something workable today rather than presenting the whole syllabus at once.
+
+**Hand independence** is its own category, and its own shape of pattern. A
+rudiment is one stream of alternating strokes, which a flat list models
+perfectly. Independence work is two streams at once — three in one hand against
+two in the other, or a steady pulse under a moving figure — where two strokes
+can fall on the same beat and a flat list cannot say so. Both are `Phrase`s
+with one line or two; a two-line phrase is drawn the way drummers write it,
+right hand above with stems up and left below with stems down.
+
+A microphone hears one drum, so on a two-line piece it cannot tell which hand
+struck. Timing is still scored; the keyboard is what checks the hands.
 
 Two rules hold this together:
 

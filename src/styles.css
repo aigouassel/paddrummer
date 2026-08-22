@@ -476,6 +476,67 @@ select {
 .sheet-transport .step-caption { flex: 1; text-align: left; }
 .sheet-transport .shortcut-hint { margin: 0; }
 
+/* Title block at the head of the sheet, so the routine reads like a page of
+   music rather than a list of staves. */
+.sheet-header { margin: 0 0 1.25rem; display: grid; gap: 0.3rem; }
+.sheet-header h2 { margin: 0; font-size: 1.2rem; letter-spacing: -0.01em; }
+.sheet-header .note { margin: 0; max-width: 46rem; }
+
+/* The time signature, called out because it is the thing that makes an odd
+   metre readable at a glance. */
+.sheet-meter {
+  flex: none;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.sheet-row.is-current .sheet-meter { border-color: var(--accent); color: var(--fg); }
+
+.sheet-note {
+  margin: 0;
+  padding: 0 0.85rem 0.7rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  max-width: 46rem;
+}
+
+.sheet-note strong { color: var(--fg); font-weight: 500; }
+
+/* ── Exercise catalogue ─────────────────────────────────────────────
+   Levels narrow the list to something workable today; categories give the
+   remaining handful a shape. */
+.level-picker button { font-size: 0.78rem; padding: 0.35rem 0.3rem; }
+
+.catalogue-group { display: grid; gap: 0.4rem; }
+
+.catalogue { display: grid; gap: 0.15rem; margin: 0; padding: 0; list-style: none; }
+
+.catalogue button {
+  width: 100%;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.catalogue button:hover { color: var(--fg); background: var(--card); }
+
+.catalogue li.is-selected button {
+  background: var(--card);
+  border-color: var(--accent);
+  color: var(--fg);
+  font-weight: 600;
+}
+
 /* Narrow screens, continued: these must come after the worksheet rules above,
    not in the earlier media block. Both are single-class selectors, so at equal
    specificity it is source order that decides which wins. */

@@ -1,12 +1,14 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useSpacebarToggle } from './useSpacebarToggle'
 import { useFollowActive } from './useFollowActive'
 import {
-  EXERCISES,
+  CATEGORY_NAMES,
   EXERCISES_BY_ID,
-  exerciseDurationSec,
-  formatDuration,
-  rudimentForStep,
+  LEVELS,
+  LEVEL_NAMES,
+  exercisesByCategory,
+  pieceForStep,
+  type Level,
 } from '../domain/exercises'
 import { usePractice } from './usePractice'
 import { useExerciseRun } from './useExerciseRun'
@@ -14,10 +16,13 @@ import { ExerciseWorksheet } from './ExerciseWorksheet'
 import { InputPanel } from './InputPanel'
 import { ScorePanel } from './ScorePanel'
 
-/** Guided routines: the app picks the rudiment and the tempo, and moves on. */
+/** Guided routines: the app picks the piece and the tempo, and moves on. */
 export function ExercisesPage() {
+  const [level, setLevel] = useState<Level>('beginner')
   const [exerciseId, setExerciseId] = useState('first-four')
   const exercise = EXERCISES_BY_ID.get(exerciseId)!
+
+  const groups = useMemo(() => exercisesByCategory(level), [level])
 
   const run = useExerciseRun(exercise)
 
@@ -29,7 +34,7 @@ export function ExercisesPage() {
     activeStroke, report,
     calibrate, setMetronome, clearLatency,
     useKeyboard, useMicrophone, setSensitivity,
-  } = usePractice(run.rudiment)
+  } = usePractice(run.piece.phrase)
 
   const calibrating = mode === 'calibrating'
 
@@ -43,57 +48,71 @@ export function ExercisesPage() {
   // highlighted step scrolls out of the left column on a long routine.
   const indexItems = useFollowActive<HTMLLIElement>(run.index)
 
+  const twoLines = run.piece.phrase.lines.length > 1
+
   return (
     <>
       <aside className="col col-left">
         <div className="panel-stack">
-          <label className="field">
-            <span>Exercise</span>
-            <select value={exerciseId} onChange={(event) => setExerciseId(event.target.value)}>
-              {EXERCISES.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className="rudiment-card">
-            <p className="eyebrow">
-              {exercise.steps.length} steps · {formatDuration(exerciseDurationSec(exercise))}
-            </p>
-            <h2>{exercise.name}</h2>
-            <p className="note">{exercise.goal}</p>
+          <div className="segmented level-picker" role="group" aria-label="Level">
+            {LEVELS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={option === level ? 'is-selected' : ''}
+                onClick={() => setLevel(option)}
+              >
+                {LEVEL_NAMES[option]}
+              </button>
+            ))}
           </div>
 
-          <ol className="steps">
-            {exercise.steps.map((step, i) => {
-              const rudiment = rudimentForStep(step)
-              const state = i === run.index ? 'is-current' : i < run.index ? 'is-done' : ''
-              return (
-                <li
-                  key={`${step.rudimentId}-${i}`}
-                  className={state}
-                  ref={(element) => {
-                    indexItems.current[i] = element
-                  }}
-                >
-                  <button type="button" onClick={() => run.jumpTo(i)}>
-                    <span className="step-name">{rudiment.name}</span>
-                    <span className="step-meta">
-                      {step.bpm} bpm · {step.repeats}×
-                    </span>
-                  </button>
-                  {i === run.index && run.running ? (
-                    <div
-                      className="step-progress"
-                      style={{ width: `${(run.cycles / step.repeats) * 100}%` }}
-                    />
-                  ) : null}
-                </li>
-              )
-            })}
-          </ol>
+          {groups.map((group) => (
+            <section key={group.category} className="catalogue-group">
+              <p className="eyebrow">{CATEGORY_NAMES[group.category]}</p>
+              <ul className="catalogue">
+                {group.exercises.map((item) => (
+                  <li key={item.id} className={item.id === exerciseId ? 'is-selected' : ''}>
+                    <button type="button" onClick={() => setExerciseId(item.id)}>
+                      {item.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+
+          <section className="panel-stack">
+            <p className="eyebrow">Steps</p>
+            <ol className="steps">
+              {exercise.steps.map((step, i) => {
+                const piece = pieceForStep(step)
+                const state = i === run.index ? 'is-current' : i < run.index ? 'is-done' : ''
+                return (
+                  <li
+                    key={`${step.pieceId}-${i}`}
+                    className={state}
+                    ref={(element) => {
+                      indexItems.current[i] = element
+                    }}
+                  >
+                    <button type="button" onClick={() => run.jumpTo(i)}>
+                      <span className="step-name">{piece.name}</span>
+                      <span className="step-meta">
+                        {step.bpm} bpm · {step.repeats}×
+                      </span>
+                    </button>
+                    {i === run.index && run.running ? (
+                      <div
+                        className="step-progress"
+                        style={{ width: `${(run.cycles / step.repeats) * 100}%` }}
+                      />
+                    ) : null}
+                  </li>
+                )
+              })}
+            </ol>
+          </section>
         </div>
       </aside>
 
@@ -114,7 +133,7 @@ export function ExercisesPage() {
             {run.running ? 'Stop' : 'Start exercise'}
           </button>
           <p className="step-caption">
-            Step {run.index + 1} of {exercise.steps.length} · <strong>{run.rudiment.name}</strong>{' '}
+            Step {run.index + 1} of {exercise.steps.length} · <strong>{run.piece.name}</strong>{' '}
             at <strong>{run.step.bpm}</strong> bpm ·{' '}
             {run.running ? `${run.cycles}/${run.step.repeats}` : `${run.step.repeats}×`}
           </p>
@@ -148,6 +167,12 @@ export function ExercisesPage() {
               column, and the read-out belongs with the other read-outs. */}
           <section className="panel-stack">
             <p className="eyebrow">Your timing</p>
+            {twoLines && input === 'microphone' ? (
+              <p className="hint">
+                A microphone hears one drum, so on a two-line piece it cannot tell which hand
+                struck. Timing is still scored; switch to the keyboard to have the hands checked.
+              </p>
+            ) : null}
             <ScorePanel report={report} showSticking={input === 'keyboard'} />
           </section>
         </div>

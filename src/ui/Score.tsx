@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { renderScore } from '../notation/score'
-import type { Stroke } from '../domain/pattern'
+import type { Phrase } from '../domain/phrase'
 
 /** Narrowest stave worth drawing; below this the column scrolls instead. */
 export const MIN_SCORE_WIDTH = 320
@@ -18,12 +18,12 @@ export const MIN_SCORE_WIDTH = 320
  * several staves, and they all share one measurement of the column they sit in.
  */
 export function Score({
-  strokes,
+  phrase,
   activeIndex,
   width,
   maxZoom,
 }: {
-  strokes: readonly Stroke[]
+  phrase: Phrase
   /** -1 for a stave nothing is playing on. */
   activeIndex: number
   width: number
@@ -35,14 +35,14 @@ export function Score({
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
-    notesRef.current = renderScore(host, strokes, width, maxZoom).noteElements
-  }, [strokes, width, maxZoom])
+    notesRef.current = renderScore(host, phrase, width, maxZoom).noteElements
+  }, [phrase, width, maxZoom])
 
   useEffect(() => {
     notesRef.current.forEach((element, index) => {
       element?.classList.toggle('is-active', index === activeIndex)
     })
-  }, [activeIndex, strokes, width, maxZoom])
+  }, [activeIndex, phrase, width, maxZoom])
 
   return <div className="score" ref={hostRef} />
 }

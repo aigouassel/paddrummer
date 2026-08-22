@@ -1,6 +1,11 @@
 import { useMemo, useRef } from 'react'
-import { fullCycle } from '../domain/pattern'
-import { rudimentForStep, type Exercise } from '../domain/exercises'
+import { meterText } from '../domain/phrase'
+import {
+  exerciseDurationSec,
+  formatDuration,
+  pieceForStep,
+  type Exercise,
+} from '../domain/exercises'
 import { Score, MIN_SCORE_WIDTH } from './Score'
 import { useElementWidth } from './useElementWidth'
 import { useFollowActive } from './useFollowActive'
@@ -41,27 +46,32 @@ export function ExerciseWorksheet({
   const width = useElementWidth(columnRef, MIN_SCORE_WIDTH)
   const rows = useFollowActive<HTMLLIElement>(index, width)
 
-  // One pass per exercise, so every `strokes` array keeps its identity across
-  // renders. That is what stops `Score` re-engraving: its effect depends on
-  // the array, and the page re-renders several times a second while playing.
+  // One pass per exercise, so every phrase keeps its identity across renders.
+  // That is what stops `Score` re-engraving: its effect depends on the phrase,
+  // and the page re-renders several times a second while playing.
   const steps = useMemo(
-    () =>
-      exercise.steps.map((step) => {
-        const rudiment = rudimentForStep(step)
-        return { step, rudiment, strokes: fullCycle(rudiment) }
-      }),
+    () => exercise.steps.map((step) => ({ step, piece: pieceForStep(step) })),
     [exercise],
   )
 
   return (
     <div className="worksheet" ref={columnRef}>
+      <header className="sheet-header">
+        <p className="eyebrow">
+          {exercise.steps.length} steps · {formatDuration(exerciseDurationSec(exercise))}
+        </p>
+        <h2>{exercise.name}</h2>
+        <p className="note">{exercise.goal}</p>
+      </header>
+
       <ol className="sheet">
-        {steps.map(({ step, rudiment, strokes }, i) => {
+        {steps.map(({ step, piece }, i) => {
           const current = i === index
           const state = current ? 'is-current' : i < index ? 'is-done' : 'is-upcoming'
+          const twoLines = piece.phrase.lines.length > 1
           return (
             <li
-              key={`${step.rudimentId}-${i}`}
+              key={`${step.pieceId}-${i}`}
               className={`sheet-row ${state}`}
               ref={(element) => {
                 rows.current[i] = element
@@ -74,20 +84,32 @@ export function ExerciseWorksheet({
                 aria-current={current ? 'step' : undefined}
               >
                 <span className="sheet-index">{i + 1}</span>
-                <span className="sheet-name">{rudiment.name}</span>
+                <span className="sheet-name">{piece.name}</span>
+                {piece.phrase.meter ? (
+                  <span className="sheet-meter">{meterText(piece.phrase.meter)}</span>
+                ) : null}
                 <span className="sheet-meta">
                   {step.bpm} bpm · {step.repeats}×
                 </span>
               </button>
 
               <Score
-                strokes={strokes}
+                phrase={piece.phrase}
                 // Only the playing stave carries a playhead; the rest are static
                 // SVG and cost nothing per frame.
                 activeIndex={current && running ? activeStroke : -1}
                 width={width}
                 maxZoom={SHEET_ZOOM}
               />
+
+              {/* The note only earns its space on the current step, and on a
+                  two-line piece, where the convention needs stating once. */}
+              {current && (piece.note || twoLines) ? (
+                <p className="sheet-note">
+                  {twoLines ? <strong>Right hand above, left below. </strong> : null}
+                  {piece.note}
+                </p>
+              ) : null}
 
               <div className="sheet-bar">
                 <div

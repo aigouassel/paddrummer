@@ -1,6 +1,8 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useSpacebarToggle } from './useSpacebarToggle'
 import { RUDIMENTS_BY_ID } from '../domain/rudiments'
+import { fullCycle } from '../domain/pattern'
+import { phraseOfStrokes } from '../domain/phrase'
 import { CALIBRATION_BEATS } from '../audio/engine'
 import { usePractice } from './usePractice'
 import { RudimentPicker } from './RudimentPicker'
@@ -15,13 +17,17 @@ export function PracticePage() {
   const [rudimentId, setRudimentId] = useState('single-paradiddle')
   const rudiment = RUDIMENTS_BY_ID.get(rudimentId)!
 
+  // Memoised: an unstable phrase would re-engrave the whole stave on every
+  // render, including the ten-a-second score refresh.
+  const phrase = useMemo(() => phraseOfStrokes(fullCycle(rudiment)), [rudiment])
+
   const {
     isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
     input, micStatus, micError, sensitivity, getMeter,
-    strokes, activeStroke, report,
+    activeStroke, report,
     toggle, calibrate, setTempo, setMetronome, clearLatency,
     useKeyboard, useMicrophone, setSensitivity,
-  } = usePractice(rudiment)
+  } = usePractice(phrase)
 
   const calibrating = mode === 'calibrating'
 
@@ -44,7 +50,7 @@ export function PracticePage() {
         {/* Stave and transport travel together: the controls belong to the
             music directly above them, not to the bottom of the column. */}
         <div className="stage" ref={stageRef}>
-          <Score strokes={strokes} activeIndex={activeStroke} width={scoreWidth} />
+          <Score phrase={phrase} activeIndex={activeStroke} width={scoreWidth} />
           <Transport
             isPlaying={isPlaying}
             disabled={calibrating}
