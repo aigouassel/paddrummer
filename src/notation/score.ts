@@ -31,13 +31,25 @@ import { toVexDuration } from './vexDuration'
 /** The line every snare note sits on. */
 const PITCH = 'c/5'
 
-const STAVE_TOP = 26
+/**
+ * Headroom above the top stave line, in stave-line units.
+ *
+ * VexFlow reserves this itself — `new Stave(x, y, w)` does not put the top
+ * line at `y`, it puts it at `y + spaceAboveStaffLn * 10`. The default of 4
+ * is more than a snare part needs: nothing goes above the stave here but a
+ * stem, an accent and the odd grace note.
+ */
+const SPACE_ABOVE_LINES = 3
+
+const STAVE_TOP = 4
 /**
  * Tall enough for accents and grace-note stems above the stave and sticking
  * letters below it, and no taller — surplus canvas is invisible whitespace
- * that pushes everything under the stave further down the page.
+ * that pushes everything under the stave further down the page. Measured
+ * rather than guessed: 4 above + 30 headroom + 40 of stave + room for the
+ * sticking letters underneath.
  */
-const HEIGHT = 140
+const HEIGHT = 112
 const PADDING = 12
 
 /** Room one note needs before the engraving starts to look cramped. */
@@ -46,7 +58,11 @@ const WIDTH_PER_NOTE = 34
 const WIDTH_PER_GRACE = 16
 /** Clef and the formatter's own left margin. */
 const FIXED_WIDTH = 60
-/** Past this the stave stops looking like music and starts looking like a logo. */
+/**
+ * Past this the stave stops looking like music and starts looking like a logo.
+ * Callers stacking several staves pass a lower cap, so more of the sheet is
+ * legible at once.
+ */
 const MAX_ZOOM = 1.5
 
 export type RenderedScore = {
@@ -117,6 +133,7 @@ export function renderScore(
   host: HTMLDivElement,
   strokes: readonly Stroke[],
   width: number,
+  maxZoom: number = MAX_ZOOM,
 ): RenderedScore {
   host.replaceChildren()
   if (strokes.length === 0) return { noteElements: [] }
@@ -138,7 +155,7 @@ export function renderScore(
       (total, stroke) => total + WIDTH_PER_NOTE + (stroke.grace?.length ?? 0) * WIDTH_PER_GRACE,
       0,
     )
-  const zoom = Math.min(MAX_ZOOM, Math.max(1, width / neededWidth))
+  const zoom = Math.min(maxZoom, Math.max(1, width / neededWidth))
   const logicalWidth = Math.max(neededWidth, width / zoom)
 
   const renderer = new Renderer(host, Renderer.Backends.SVG)
@@ -146,7 +163,9 @@ export function renderScore(
   const context = renderer.getContext()
   context.scale(zoom, zoom)
 
-  const stave = new Stave(PADDING, STAVE_TOP, logicalWidth - PADDING * 2)
+  const stave = new Stave(PADDING, STAVE_TOP, logicalWidth - PADDING * 2, {
+    spaceAboveStaffLn: SPACE_ABOVE_LINES,
+  })
   stave.addClef('percussion')
   stave.setContext(context).draw()
 

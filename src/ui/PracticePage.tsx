@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSpacebarToggle } from './useSpacebarToggle'
 import { RUDIMENTS_BY_ID } from '../domain/rudiments'
 import { CALIBRATION_BEATS } from '../audio/engine'
 import { usePractice } from './usePractice'
 import { RudimentPicker } from './RudimentPicker'
 import { Transport } from './Transport'
-import { Score } from './Score'
+import { Score, MIN_SCORE_WIDTH } from './Score'
 import { ScorePanel } from './ScorePanel'
 import { InputPanel } from './InputPanel'
+import { useElementWidth } from './useElementWidth'
 
 /** Free practice: one rudiment, your tempo, for as long as you like. */
 export function PracticePage() {
@@ -24,6 +25,11 @@ export function PracticePage() {
 
   const calibrating = mode === 'calibrating'
 
+  // The stave is measured from the stage rather than from itself, so both
+  // pages feed `Score` the same way.
+  const stageRef = useRef<HTMLDivElement>(null)
+  const scoreWidth = useElementWidth(stageRef, MIN_SCORE_WIDTH)
+
   // Not during calibration: the transport is disabled then, and the player is
   // busy tapping along to the click.
   useSpacebarToggle(toggle, !calibrating)
@@ -37,8 +43,8 @@ export function PracticePage() {
       <main className="col col-center">
         {/* Stave and transport travel together: the controls belong to the
             music directly above them, not to the bottom of the column. */}
-        <div className="stage">
-          <Score strokes={strokes} activeIndex={activeStroke} />
+        <div className="stage" ref={stageRef}>
+          <Score strokes={strokes} activeIndex={activeStroke} width={scoreWidth} />
           <Transport
             isPlaying={isPlaying}
             disabled={calibrating}
