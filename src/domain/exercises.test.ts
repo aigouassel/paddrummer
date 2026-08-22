@@ -1,25 +1,35 @@
 import { describe, expect, it } from 'vitest'
 import {
+  CATEGORIES,
   EXERCISES,
   EXERCISES_BY_ID,
+  LEVELS,
   exerciseDurationSec,
+  exercisesAtLevel,
+  exercisesByCategory,
   formatDuration,
-  rudimentForStep,
+  pieceForStep,
   stepDurationSec,
 } from './exercises'
-import { RUDIMENTS_BY_ID } from './rudiments'
+import { placedStrokes } from './phrase'
 
 describe('exercise catalogue', () => {
   it('has unique ids', () => {
     expect(EXERCISES_BY_ID.size).toBe(EXERCISES.length)
   })
 
-  it('only references rudiments that exist', () => {
+  it('only references pieces that exist', () => {
     for (const exercise of EXERCISES) {
       for (const step of exercise.steps) {
-        expect(RUDIMENTS_BY_ID.has(step.rudimentId), `${exercise.id}: ${step.rudimentId}`).toBe(
-          true,
-        )
+        expect(() => pieceForStep(step), `${exercise.id}: ${step.pieceId}`).not.toThrow()
+      }
+    }
+  })
+
+  it('never schedules an empty piece', () => {
+    for (const exercise of EXERCISES) {
+      for (const step of exercise.steps) {
+        expect(placedStrokes(pieceForStep(step).phrase).length, step.pieceId).toBeGreaterThan(0)
       }
     }
   })
@@ -46,11 +56,84 @@ describe('exercise catalogue', () => {
       expect(seconds, exercise.id).toBeLessThan(15 * 60)
     }
   })
+
+  it('gives every exercise a goal worth reading', () => {
+    for (const exercise of EXERCISES) {
+      expect(exercise.goal.length, exercise.id).toBeGreaterThan(30)
+    }
+  })
+})
+
+describe('levels and categories', () => {
+  it('fills every level', () => {
+    for (const level of LEVELS) {
+      expect(exercisesAtLevel(level).length, level).toBeGreaterThanOrEqual(6)
+    }
+  })
+
+  it('accounts for every exercise exactly once across the levels', () => {
+    const counted = LEVELS.flatMap((level) => exercisesAtLevel(level))
+    expect(counted).toHaveLength(EXERCISES.length)
+  })
+
+  it('offers independence work at every level, not only the hard end', () => {
+    for (const level of LEVELS) {
+      const independence = exercisesAtLevel(level).filter((e) => e.category === 'independence')
+      expect(independence.length, level).toBeGreaterThan(0)
+    }
+  })
+
+  it('groups a level into categories without losing or duplicating anything', () => {
+    for (const level of LEVELS) {
+      const grouped = exercisesByCategory(level).flatMap((group) => group.exercises)
+      expect(new Set(grouped).size).toBe(grouped.length)
+      expect(grouped).toHaveLength(exercisesAtLevel(level).length)
+    }
+  })
+
+  it('never emits an empty category heading', () => {
+    for (const level of LEVELS) {
+      for (const group of exercisesByCategory(level)) {
+        expect(group.exercises.length, `${level}/${group.category}`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('lists groups in the catalogue s declared order', () => {
+    for (const level of LEVELS) {
+      const order = exercisesByCategory(level).map((group) => group.category)
+      const expected = CATEGORIES.filter((category) => order.includes(category))
+      expect(order).toEqual(expected)
+    }
+  })
+})
+
+describe('independence exercises', () => {
+  it('only ever schedules two-line pieces', () => {
+    const independence = EXERCISES.filter((e) => e.category === 'independence')
+    expect(independence.length).toBeGreaterThan(0)
+    for (const exercise of independence) {
+      for (const step of exercise.steps) {
+        const { phrase } = pieceForStep(step)
+        expect(phrase.lines.length, `${exercise.id}: ${step.pieceId}`).toBe(2)
+        expect(phrase.meter, step.pieceId).not.toBeNull()
+      }
+    }
+  })
+
+  it('keeps every other category on a single line', () => {
+    for (const exercise of EXERCISES) {
+      if (exercise.category === 'independence') continue
+      for (const step of exercise.steps) {
+        expect(pieceForStep(step).phrase.lines.length, exercise.id).toBe(1)
+      }
+    }
+  })
 })
 
 describe('stepDurationSec', () => {
   it('halves when the tempo doubles', () => {
-    const slow = { rudimentId: 'single-paradiddle', bpm: 60, repeats: 4 }
+    const slow = { pieceId: 'single-paradiddle', bpm: 60, repeats: 4 }
     const fast = { ...slow, bpm: 120 }
     expect(stepDurationSec(slow)).toBeCloseTo(stepDurationSec(fast) * 2, 6)
   })
@@ -58,16 +141,17 @@ describe('stepDurationSec', () => {
   it('counts a full cycle, both lead hands included', () => {
     // A paradiddle cycle is RLRR LRLL: two beats, so four repeats at 60bpm
     // is eight seconds.
-    expect(stepDurationSec({ rudimentId: 'single-paradiddle', bpm: 60, repeats: 4 })).toBeCloseTo(
-      8,
-      6,
-    )
+    expect(stepDurationSec({ pieceId: 'single-paradiddle', bpm: 60, repeats: 4 })).toBeCloseTo(8, 6)
   })
 
-  it('rejects a step naming a rudiment that does not exist', () => {
-    expect(() => rudimentForStep({ rudimentId: 'nope', bpm: 90, repeats: 1 })).toThrow(
-      /Unknown rudiment/,
-    )
+  it('measures a two-line piece by its bar, not by its note count', () => {
+    // Three Against Two is one 3/4 bar: three beats, so two repeats at 60bpm
+    // is six seconds, whichever hand plays more notes.
+    expect(stepDurationSec({ pieceId: 'three-against-two', bpm: 60, repeats: 2 })).toBeCloseTo(6, 6)
+  })
+
+  it('rejects a step naming a piece that does not exist', () => {
+    expect(() => pieceForStep({ pieceId: 'nope', bpm: 90, repeats: 1 })).toThrow(/Unknown piece/)
   })
 })
 
