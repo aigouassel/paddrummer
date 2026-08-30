@@ -1,25 +1,26 @@
-import { useMemo, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useSpacebarToggle } from './useSpacebarToggle'
-import { RUDIMENTS_BY_ID } from '../domain/rudiments'
-import { fullCycle } from '../domain/pattern'
-import { phraseOfStrokes } from '../domain/phrase'
+import { CATALOGUE_BY_ID, DEFAULT_PIECE_ID } from '../domain/catalogue'
 import { CALIBRATION_BEATS } from '../audio/engine'
 import { usePractice } from './usePractice'
-import { RudimentPicker } from './RudimentPicker'
+import { PiecePicker } from './PiecePicker'
 import { Transport } from './Transport'
 import { Score, MIN_SCORE_WIDTH } from './Score'
 import { ScorePanel } from './ScorePanel'
 import { InputPanel } from './InputPanel'
 import { useElementWidth } from './useElementWidth'
 
-/** Free practice: one rudiment, your tempo, for as long as you like. */
+/** Free practice: one piece, your tempo, for as long as you like. */
 export function PracticePage() {
-  const [rudimentId, setRudimentId] = useState('single-paradiddle')
-  const rudiment = RUDIMENTS_BY_ID.get(rudimentId)!
+  const [pieceId, setPieceId] = useState(DEFAULT_PIECE_ID)
+  const entry = CATALOGUE_BY_ID.get(pieceId)!
 
-  // Memoised: an unstable phrase would re-engrave the whole stave on every
-  // render, including the ten-a-second score refresh.
-  const phrase = useMemo(() => phraseOfStrokes(fullCycle(rudiment)), [rudiment])
+  // The catalogue is built once at module load, so this is already a stable
+  // reference and needs no memo. That matters: an unstable phrase would
+  // re-engrave the whole stave on every render, including the ten-a-second
+  // score refresh.
+  const phrase = entry.piece.phrase
+  const twoLines = phrase.lines.length > 1
 
   const {
     isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
@@ -43,7 +44,7 @@ export function PracticePage() {
   return (
     <>
       <aside className="col col-left">
-        <RudimentPicker rudiment={rudiment} onSelect={setRudimentId} />
+        <PiecePicker entry={entry} onSelect={setPieceId} />
       </aside>
 
       <main className="col col-center">
@@ -66,7 +67,15 @@ export function PracticePage() {
             what you hear and what the app sees, so your timing is scored fairly.
           </p>
         ) : (
-          <ScorePanel report={report} showSticking={input === 'keyboard'} />
+          <>
+            {twoLines && input === 'microphone' ? (
+              <p className="hint">
+                A microphone hears one drum, so on a two-line piece it cannot tell which hand
+                struck. Timing is still scored; switch to the keyboard to have the hands checked.
+              </p>
+            ) : null}
+            <ScorePanel report={report} showSticking={input === 'keyboard'} />
+          </>
         )}
       </main>
 
