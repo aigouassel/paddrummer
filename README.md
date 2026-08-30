@@ -215,5 +215,16 @@ The grid says where to look; the sheet is what you look at.
 
 Videos live in `assets/`, gitignored alongside the book photographs.
 
+What came out of the first clip is in `src/domain/padGrooves.ts`: a kit groove
+voiced on one pad, butt of the stick for the bass drum and shoulder for the
+snare. That is the first material where a hand does not tell you what the note
+is meant to be, so `Stroke` gained an optional `part`. Absent means the piece
+does not distinguish — every rudiment and every book exercise — rather than
+meaning "shoulder", and tests hold both halves of that line.
+
+Only the opening groove is transcribed. The faster sections' rhythm is known
+but their sticking is not readable at 30 fps, and a stroke nobody can see is
+not written down.
+
 [`docs/transcribing-video.md`](docs/transcribing-video.md) records the method,
 the four automated approaches that failed and why, and what is still open.

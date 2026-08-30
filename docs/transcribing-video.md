@@ -142,14 +142,14 @@ and, read off the frames, the butt is his left hand and the shoulder his right.
 
 150.12 bpm, 4/4, sixteenth = 99.92 ms.
 
-## 8. What a stroke needs that the model does not have
+## 8. What a stroke needs that the model did not have
 
-Every stroke here carries a second fact the `Phrase` model has no room for:
+Every stroke here carries a second fact the `Phrase` model had no room for:
 which part of the stick sounded it. A hand is the whole story for a rudiment or
 a Stick Control page, and it is not the whole story here — in the fills both
 hands play the snare voice, so hand and voice come apart.
 
-The agreed shape is an optional field on `Stroke`:
+`Stroke` now takes an optional part:
 
 ```ts
 export type StickPart = 'shoulder' | 'butt'
@@ -158,17 +158,46 @@ export type StickPart = 'shoulder' | 'butt'
 Absent means **the piece does not distinguish**, not "shoulder". The difference
 matters: a default of `'shoulder'` would silently assert that all ~460 existing
 Stick Control strokes are shoulder strokes, when on a snare they are tip
-strokes. Material that voices more than one drum sets the field on *every*
-stroke, not only the exceptional ones.
+strokes. An optional field's default is a claim about every record that omits
+it, and "unspecified" stays true whatever else is in the table. A piece that
+does distinguish sets the field on *every* stroke, not only the exceptional
+ones, and a test enforces both halves of that: no stroke in this groove may
+omit it, and no rudiment, study or book exercise may carry it.
 
-## 9. Still open
+## 9. What was transcribed, and what the video will not give up
 
-The sticking. The rhythm map, the section boundaries and the two stick parts
-are settled and checked; which hand plays each stroke is read but not yet
-finished. The opening groove is the awkward part rather than the fast passages:
-its soft beats do not reach the pad visibly, and the butt strokes fall 2, 3, 3,
-2 beats apart, which is either a real syncopation or a sign that soft strokes
-are being missed. It is not written down until it can be seen.
+**Transcribed** (`src/domain/padGrooves.ts`): the opening groove, two bars of
+quarter notes, every stroke read off a named frame and then confirmed by
+predicting the repeat eight beats later.
 
-Read one cycle per section rather than all ~230 strokes — the sections repeat,
-and the captions name the rudiments — then spot-check that the repeats match.
+```
+        1      2      3      4
+bar 1   bass   –      snare  bass
+bar 2   –      bass   snare  –
+```
+
+The snare sits on beat 3 of both bars — a half-time feel — and the bass
+carries the syncopation. The audio grid also showed a soft reading on the beats
+written as rests; the pad is empty in every frame at those moments, so they are
+the previous stroke ringing rather than notes. Trusting the grid alone would
+have added five phantom strokes to two bars.
+
+**Not transcribed:** the sticking of the 8th, 16th, roll and switched-hands
+sections. Their *rhythm* is known — the grid map in §3 is reliable, and the
+section boundaries are certain — but which hand and which stick part plays each
+note is not readable from this footage:
+
+- A 16th is 100 ms, or three frames, and the strokes are small and fast.
+- Foreshortening defeats the one cue that works in the slow section. Seen down
+  its length, a stick played tip-down looks like the short vertical stub that
+  means butt-down when the groove is slow (frames 471–491).
+- At frames 486–488 two sticks appear on the pad at once, which the two-voice
+  reading of the groove does not explain.
+
+Written down, that would be invention. The doctrine the Stick Control pages
+run on says the tail may be generated from a rule *only once the rule has been
+verified against the source*, and here it cannot be. So the file stops.
+
+What would finish it is not more cleverness with this clip — it is a clip shot
+from a steeper angle, or at 60 fps, where the stick does not foreshorten. Every
+format YouTube offers for this one is 30 fps.
