@@ -13,8 +13,9 @@ copied straight across:
     page-9.HEIC · line 5-6                ->   ./my.show-source.py 9 left 5 --span 2 --single
     page-34.HEIC · full width, line 8     ->   ./my.show-source.py 34 left 8 --single
 
-Personal tooling: it reads `assets/`, which is gitignored because the scans are
-a copyrighted book, so it only runs where those files exist.
+Personal tooling: it reads the photographed pages under `sources/`, which are
+committed alongside the transcription so any exercise can be checked against
+its page from a clone alone.
 """
 import argparse
 import subprocess
@@ -22,7 +23,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ASSETS = Path(__file__).parent / "assets" / "stick-control-for-the-snare-drummer"
+ASSETS = Path(__file__).parent / "sources" / "stick-control-for-the-snare-drummer"
 
 # Line slots down a column, where a page does not have the usual twelve. A rule
 # ruled across the page takes a slot of its own even though no staff sits on

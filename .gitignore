@@ -8,16 +8,17 @@ dist/
 !.yarn/releases
 .pnp.*
 
-# Photographs of copyrighted practice books, used as a transcription source.
-# The transcribed patterns live in packages/stick-control/src/stickControl.ts; the page images
-# themselves stay out of version control.
-assets/
+# Video source material. The clips are copyrighted and kept for personal
+# practice, so none of them are committed. This is an allowlist rather than a
+# list of extensions to exclude: default-deny means a format nobody thought of
+# is out too.
+#
+# The photographed book pages under packages/stick-control/sources/ are the
+# deliberate exception — they ARE committed, so an exercise can be put beside
+# its page from a clone alone. No rule here mentions them, so that nothing
+# claims otherwise: a pattern saying "ignored" over files git actually tracks
+# is how the previous arrangement misled for three weeks.
 
-# Video source material, on the same terms as the book scans: the clips are
-# copyrighted and transcribed for personal practice, so none of them ship.
-# Written as an allowlist rather than a list of extensions to exclude —
-# default-deny means a format nobody thought of is out too, and the cost of
-# getting this wrong is publishing someone else's video.
 packages/videos/sources/**
 !packages/videos/sources/**/
 !packages/videos/sources/**/grid.json
