@@ -58,6 +58,64 @@ describe('pad grooves', () => {
     expect(at).toHaveLength(5)
   })
 
+  it('says how much of each piece was actually seen', () => {
+    // A piece whose sticking is conventional rather than observed has to admit
+    // it where a reader will meet it, not only in a doc.
+    for (const groove of PAD_GROOVES) {
+      if (groove.reading === 'rhythm') {
+        expect(groove.note, `${groove.id} must explain its sticking`).toMatch(
+          /sticking|lead hand|conventional/i,
+        )
+      }
+    }
+    expect(PAD_GROOVES.filter((g) => g.reading === 'frames')).toHaveLength(1)
+  })
+
+  it('covers the clip end to end without gaps or overlaps', () => {
+    // The point of "transcribe it fully": every second of playing is in one
+    // piece or another, in order.
+    const spans = [...PAD_GROOVES].sort((a, b) => a.at.from - b.at.from)
+    expect(spans[0]!.at.from).toBeLessThan(2.0)
+    expect(spans[spans.length - 1]!.at.to).toBeGreaterThan(33)
+    spans.forEach((groove, i) => {
+      if (i > 0) expect(groove.at.from).toBeCloseTo(spans[i - 1]!.at.to, 2)
+    })
+  })
+
+  it('subdivides each section the way the recording measures', () => {
+    const beatsOf = (id: string) => {
+      const phrase = PAD_GROOVES_BY_ID.get(id)!.phrase
+      return { beats: toNumber(phrase.beats), strokes: placedStrokes(phrase).length }
+    }
+    // Two bars of quarters, then the same filled twice over.
+    expect(beatsOf('pad-groove-quarters')).toEqual({ beats: 8, strokes: 5 })
+    expect(beatsOf('pad-groove-eighths')).toEqual({ beats: 8, strokes: 16 })
+    // One bar of sixteenths, less the two after the backbeat.
+    expect(beatsOf('pad-groove-sixteenths')).toEqual({ beats: 4, strokes: 14 })
+    expect(beatsOf('pad-groove-sixteenths-switched')).toEqual({ beats: 4, strokes: 14 })
+    // Sextuplets: three strokes a hand, one triple to each eighth.
+    expect(beatsOf('pad-triple-stroke-roll')).toEqual({ beats: 4, strokes: 24 })
+  })
+
+  it('alternates hands through the sixteenth fills', () => {
+    for (const id of ['pad-groove-sixteenths', 'pad-groove-sixteenths-switched']) {
+      const hands = placedStrokes(PAD_GROOVES_BY_ID.get(id)!.phrase)
+        .sort((a, b) => toNumber(a.atBeat) - toNumber(b.atBeat))
+        .map((placed) => placed.stroke.hand)
+      hands.forEach((hand, i) => {
+        if (i > 0) expect(hand, `${id} repeats a hand at stroke ${i}`).not.toBe(hands[i - 1])
+      })
+    }
+  })
+
+  it('groups the roll three strokes to a hand', () => {
+    const hands = placedStrokes(PAD_GROOVES_BY_ID.get('pad-triple-stroke-roll')!.phrase)
+      .sort((a, b) => toNumber(a.atBeat) - toNumber(b.atBeat))
+      .map((placed) => placed.stroke.hand)
+      .join('')
+    expect(hands).toBe('RRRLLL'.repeat(4))
+  })
+
   it('records where it was read from', () => {
     for (const groove of PAD_GROOVES) {
       expect(groove.at.file).toMatch(/\.(mp4|mov|webm)$/)
