@@ -25,7 +25,7 @@ import {
   meterText,
   placedStrokes,
 } from '../domain/phrase'
-import { toVexDuration } from './vexDuration'
+import { type TupletRatio, toVexDuration } from './vexDuration'
 
 /**
  * Draws a phrase as snare notation.
@@ -141,21 +141,37 @@ function buildRest(durationValue: Stroke['duration'], pitch: string): StaveNote 
   return rest
 }
 
-/** Collects runs of consecutive triplet events into tuplet brackets. */
+/**
+ * Collects runs of consecutive bracketed events into tuplets.
+ *
+ * A run has to be broken when the ratio changes as well as when it ends, or a
+ * bar that puts a triplet next to a quintuplet would close the first bracket
+ * around notes belonging to the second.
+ */
 function buildTuplets(line: PhraseLine, tickables: StaveNote[]): Tuplet[] {
   const tuplets: Tuplet[] = []
   let run: StaveNote[] = []
+  let ratio: TupletRatio | null = null
+
+  const sameRatio = (a: TupletRatio | null, b: TupletRatio | null): boolean =>
+    a !== null && b !== null && a.numNotes === b.numNotes && a.notesOccupied === b.notesOccupied
 
   line.events.forEach((event, index) => {
-    const { tupletOf } = toVexDuration(event.duration)
-    if (tupletOf === null) {
+    const { tuplet } = toVexDuration(event.duration)
+    if (tuplet === null) {
       run = []
+      ratio = null
       return
     }
-    run.push(tickables[index]!)
-    if (run.length === tupletOf) {
-      tuplets.push(new Tuplet(run, { numNotes: tupletOf, notesOccupied: 2 }))
+    if (!sameRatio(ratio, tuplet)) {
       run = []
+      ratio = tuplet
+    }
+    run.push(tickables[index]!)
+    if (run.length === tuplet.numNotes) {
+      tuplets.push(new Tuplet(run, tuplet))
+      run = []
+      ratio = null
     }
   })
 

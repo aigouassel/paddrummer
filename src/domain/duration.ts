@@ -59,3 +59,15 @@ export const SIXTEENTH: Fraction = [1, 4]
 export const THIRTY_SECOND: Fraction = [1, 8]
 export const EIGHTH_TRIPLET: Fraction = [1, 3]
 export const SIXTEENTH_TRIPLET: Fraction = [1, 6]
+
+/**
+ * Groups the page writes as a plain note with a number over it, and which have
+ * no NoteValue because they are not a note value: a quintuplet eighth is two
+ * fifths of a beat and nothing shorter divides it. The notation layer knows
+ * how to bracket them; here they are only lengths.
+ */
+
+/** One of five eighth notes in the space of four — Stone's `5` bracket. */
+export const QUINTUPLET_EIGHTH: Fraction = [2, 5]
+/** One of eight sixteenths in the space of six — the `8` bracket in 6/8. */
+export const OCTUPLET_SIXTEENTH: Fraction = [3, 16]

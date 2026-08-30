@@ -1,4 +1,11 @@
-import { type Duration, toNoteValue } from '../domain/duration'
+import {
+  type Duration,
+  OCTUPLET_SIXTEENTH,
+  QUINTUPLET_EIGHTH,
+  toBeats,
+  toNoteValue,
+} from '../domain/duration'
+import { type Fraction, equals } from '../domain/fraction'
 
 /**
  * Translates a domain duration into what VexFlow needs to draw it.
@@ -21,23 +28,45 @@ import { type Duration, toNoteValue } from '../domain/duration'
  * single voice, and badly wrong the moment a second voice has to line up
  * against it.
  */
+
+/** How many of a note fill the space of how many others of it. */
+export type TupletRatio = { numNotes: number; notesOccupied: number }
+
 export type VexDuration = {
   /** A VexFlow duration string, dots included: 'q', '8', 'qd', 'hdd'. */
   duration: string
   dots: number
-  /** How many of this note fill the space of two, or null when not a tuplet. */
-  tupletOf: number | null
+  /** The bracket this note belongs under, or null when it needs none. */
+  tuplet: TupletRatio | null
 }
+
+/**
+ * The tuplets that are not triplets. A triplet is spelled into the note value
+ * itself — `8t` — because every other rudiment uses one; these two are only
+ * ever met in a practice book, so they stay plain fractions in the domain and
+ * are recognised here by their length. Five eighths in the space of four is
+ * Stone's `5` bracket, and eight sixteenths in the space of six his `8` in 6/8.
+ */
+const BRACKETED: readonly [length: Fraction, glyph: string, tuplet: TupletRatio][] = [
+  [QUINTUPLET_EIGHTH, '8', { numNotes: 5, notesOccupied: 4 }],
+  [OCTUPLET_SIXTEENTH, '16', { numNotes: 8, notesOccupied: 6 }],
+]
 
 const PLAIN = new Set(['w', 'h', 'q', '8', '16', '32', '64'])
 
 export function toVexDuration(value: Duration): VexDuration {
+  const beats = toBeats(value)
+  const bracketed = BRACKETED.find(([length]) => equals(beats, length))
+  if (bracketed) return { duration: bracketed[1], dots: 0, tuplet: bracketed[2] }
+
   const note = toNoteValue(value)
   if (note === null) {
     throw new Error(`toVexDuration: no glyph for duration ${JSON.stringify(value)}`)
   }
-  if (PLAIN.has(note)) return { duration: note, dots: 0, tupletOf: null }
-  if (note.endsWith('.')) return { duration: `${note.slice(0, -1)}d`, dots: 1, tupletOf: null }
-  if (note.endsWith('t')) return { duration: note.slice(0, -1), dots: 0, tupletOf: 3 }
+  if (PLAIN.has(note)) return { duration: note, dots: 0, tuplet: null }
+  if (note.endsWith('.')) return { duration: `${note.slice(0, -1)}d`, dots: 1, tuplet: null }
+  if (note.endsWith('t')) {
+    return { duration: note.slice(0, -1), dots: 0, tuplet: { numNotes: 3, notesOccupied: 2 } }
+  }
   throw new Error(`toVexDuration: unhandled note value ${note}`)
 }
