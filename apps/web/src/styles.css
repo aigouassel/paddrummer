@@ -53,12 +53,25 @@ body {
    * engraving is; the inner max() keeps the ceiling above the floor when the
    * window is too small for either.
    */
-  --right-effective: clamp(
-    180px,
-    var(--right-column, 14rem),
-    max(180px, calc(100vw - 14rem - 2rem - var(--music-min, 0px)))
+  /*
+   * The room the two columns may share out: the window, less the centre's own
+   * padding, less what the music on this page cannot give up. The left column
+   * is capped assuming the right keeps its minimum, and the right against what
+   * the left actually took — so the pair always fits and the music is served
+   * before either of them.
+   */
+  --panel-space: calc(100vw - 2rem - var(--music-min, 0px));
+  --left-effective: clamp(
+    11rem,
+    var(--left-column, 14rem),
+    max(11rem, calc(var(--panel-space) - 12rem))
   );
-  grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr) var(--right-effective);
+  --right-effective: clamp(
+    12rem,
+    var(--right-column, 14rem),
+    max(12rem, calc(var(--panel-space) - var(--left-effective)))
+  );
+  grid-template-columns: var(--left-effective) minmax(0, 1fr) var(--right-effective);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'top top top'
@@ -80,15 +93,16 @@ body {
   position: absolute;
   top: 0;
   bottom: 0;
-  right: var(--right-effective);
   width: 6px;
-  margin-right: -3px;
   cursor: col-resize;
   /* Above both columns' own scrolling content, or the grab misses near a
      scrollbar. */
   z-index: 2;
   touch-action: none;
 }
+
+.col-resizer-left { left: var(--left-effective); margin-left: -3px; }
+.col-resizer-right { right: var(--right-effective); margin-right: -3px; }
 
 .col-resizer:hover,
 .col-resizer:focus-visible { background: var(--accent); outline: none; }
@@ -158,13 +172,18 @@ body {
    instead of running into the window edge, and a wide one, because with the
    panel gone there is no border there to stop the eye. The left column takes a
    share of the freed width too, since the lists are what it was short of. */
-.layout.is-panel-hidden { grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) 3.5rem; }
+.layout.is-panel-hidden { grid-template-columns: var(--left-effective) minmax(0, 1fr) 3.5rem; }
 .layout.is-panel-hidden .col-right { display: none; }
 
 /* Home and the glossary are read, not played: no list to pick from, no timing
    to watch, so the three columns collapse to one and the text takes a measure
    it can be read at rather than the full window. */
 .layout.is-reading { grid-template-columns: 1fr; grid-template-areas: 'top' 'center'; }
+
+/* The glossary reads like a document but is long enough to need finding your
+   way around, so it keeps the list column and drops the panel. */
+.layout.is-contents { grid-template-columns: var(--left-effective) minmax(0, 1fr) 3.5rem; }
+.layout.is-contents .col-right { display: none; }
 
 .col-left { grid-area: left; border-right: 1px solid var(--line); }
 .col-right { grid-area: right; border-left: 1px solid var(--line); }
@@ -863,3 +882,16 @@ select {
 
 .glossary-see a { color: var(--accent); text-decoration: none; }
 .glossary-see a:hover { text-decoration: underline; }
+
+
+/* The contents list: links rather than buttons, because they are anchors. */
+.catalogue a {
+  display: block;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.catalogue a:hover { color: var(--fg); background: var(--card); }

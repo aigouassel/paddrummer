@@ -12,6 +12,7 @@
 
 export type TermGroup =
   | 'stick'
+  | 'voices'
   | 'sticking'
   | 'rudiments'
   | 'rhythm'
@@ -20,6 +21,7 @@ export type TermGroup =
 
 export const GROUPS: readonly TermGroup[] = [
   'stick',
+  'voices',
   'sticking',
   'rudiments',
   'rhythm',
@@ -28,7 +30,8 @@ export const GROUPS: readonly TermGroup[] = [
 ]
 
 export const GROUP_NAMES: Record<TermGroup, string> = {
-  stick: 'Holding the stick',
+  stick: 'Parts of the stick',
+  voices: 'One pad, several voices',
   sticking: 'Which hand, and how',
   rudiments: 'The rudiment families',
   rhythm: 'Rhythm and notation',
@@ -51,21 +54,21 @@ export const TERMS: readonly Term[] = [
     group: 'stick',
     definition:
       'The bead at the playing end of the stick. Nearly everything is played with it: it is the lightest part, so it is the part that can move fastest.',
-    see: ['Shoulder', 'Butt'],
+    see: ['Tip stroke', 'Shoulder', 'Butt'],
   },
   {
     term: 'Shoulder',
     group: 'stick',
     definition:
-      'The taper just behind the tip, where the stick begins to thicken. Struck against a rim or a cymbal edge it gives a harder sound. In this app’s pad grooves it is the snare voice: the stick is laid across the pad so the shoulder lands on it.',
-    see: ['Tip', 'Practice pad'],
+      'The taper just behind the tip, where the stick begins to thicken. Heavier than the tip and less controllable, so it is used for what it sounds like rather than for speed.',
+    see: ['Shoulder stroke', 'Tip'],
   },
   {
     term: 'Butt',
     group: 'stick',
     definition:
-      'The thick end, opposite the tip. Turning the stick round gives a heavier, blunter stroke. In the pad grooves it stands in for the bass drum.',
-    see: ['Tip', 'Bass drum'],
+      'The thick end, opposite the tip. Turning the stick round puts the heaviest part of it on the head.',
+    see: ['Butt stroke', 'Tip'],
   },
   {
     term: 'Rebound',
@@ -73,6 +76,36 @@ export const TERMS: readonly Term[] = [
     definition:
       'The stick coming back off the head by itself. Most speed comes from letting it rebound rather than lifting it, which is why a double is easier than two separate strokes.',
     see: ['Diddle', 'Multiple bounce'],
+  },
+
+  // ── One pad, several voices ──────────────────────────────────────
+  {
+    term: 'Tip stroke',
+    group: 'voices',
+    definition:
+      'The ordinary stroke: the bead of the stick on the middle of the pad. It is the one this app does not name on a note, because it is what a stroke is unless something says otherwise.',
+    see: ['Tip', 'Shoulder stroke', 'Butt stroke'],
+  },
+  {
+    term: 'Shoulder stroke',
+    group: 'voices',
+    definition:
+      'The stick laid across the pad so the taper behind the tip lands on it, giving a flatter, harder sound. In the pad grooves this is the snare voice — the backbeat you hear on 2 and 4.',
+    see: ['Shoulder', 'Snare drum', 'Backbeat'],
+  },
+  {
+    term: 'Butt stroke',
+    group: 'voices',
+    definition:
+      'The stick turned round so the thick end strikes, giving a duller and lower sound. In the pad grooves this is the bass drum. The player holds one stick inverted for the whole clip, which is why the left hand is always the bass voice there.',
+    see: ['Butt', 'Bass drum'],
+  },
+  {
+    term: 'Stick-to-stick',
+    group: 'voices',
+    definition:
+      'Striking one stick against the other for a dry click, a common way to get a fourth sound out of a pad. Nothing transcribed here uses it: the app names only the shoulder and the butt, because those are the two that stand in for another drum, and every other stroke is an ordinary tip stroke.',
+    see: ['Tip stroke', 'Practice pad'],
   },
 
   // ── Which hand, and how ──────────────────────────────────────────
@@ -262,7 +295,7 @@ export const TERMS: readonly Term[] = [
     group: 'drums',
     definition:
       'A rubber or silicone surface on a base, quiet enough to practise on anywhere. It has one sound, which is why a groove played on one has to fake its voices with different parts of the stick.',
-    see: ['Shoulder', 'Butt'],
+    see: ['Shoulder stroke', 'Butt stroke'],
   },
 
   // ── Words this app uses ──────────────────────────────────────────
@@ -305,3 +338,14 @@ export const TERMS: readonly Term[] = [
 
 export const TERMS_BY_GROUP = (group: TermGroup): Term[] =>
   TERMS.filter((entry) => entry.group === group)
+
+/**
+ * A term as a URL fragment.
+ *
+ * Terms are prose — "Multiple bounce", "Stick-to-stick" — and an `id` may not
+ * contain a space, so linking to one straight would produce an anchor that
+ * silently goes nowhere. Everything that links to a term goes through here so
+ * the two ends cannot disagree.
+ */
+export const slug = (term: string): string =>
+  term.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')

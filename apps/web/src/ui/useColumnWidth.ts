@@ -35,10 +35,17 @@ export function useColumnWidth({
   fallback,
   min,
   max,
+  edge = 'right',
 }: {
   key: string
   fallback: number
   min: number
+  /**
+   * Which side of the window the column is on, which is what decides the
+   * direction. Both handles move the column's *inner* edge, so the left column
+   * grows as the pointer goes right and the right column as it goes left.
+   */
+  edge?: 'left' | 'right'
   /**
    * Read on every movement rather than fixed, because the ceiling moves: it
    * depends on the window and on how much room the music on screen needs, and
@@ -64,11 +71,10 @@ export function useColumnWidth({
     (event: ReactPointerEvent<HTMLElement>) => {
       const start = drag.current
       if (!start) return
-      // Dragging left widens the column, because the edge being moved is its
-      // left edge and the column grows away from it.
-      setWidth(clamp(start.width - (event.clientX - start.x), min, max()))
+      const travelled = event.clientX - start.x
+      setWidth(clamp(start.width + (edge === 'left' ? travelled : -travelled), min, max()))
     },
-    [min, max],
+    [min, max, edge],
   )
 
   const onPointerUp = useCallback(
@@ -86,14 +92,16 @@ export function useColumnWidth({
   const onKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLElement>) => {
       const step = event.shiftKey ? 48 : 12
-      const delta = event.key === 'ArrowLeft' ? step : event.key === 'ArrowRight' ? -step : 0
+      const grow = edge === 'left' ? 'ArrowRight' : 'ArrowLeft'
+      const shrink = edge === 'left' ? 'ArrowLeft' : 'ArrowRight'
+      const delta = event.key === grow ? step : event.key === shrink ? -step : 0
       if (delta === 0) return
       event.preventDefault()
       const next = clamp(width + delta, min, max())
       setWidth(next)
       write(key, next)
     },
-    [key, width, min, max],
+    [key, width, min, max, edge],
   )
 
   return { width, min, onPointerDown, onPointerMove, onPointerUp, onKeyDown }

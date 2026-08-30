@@ -18,8 +18,8 @@ import { PAGE_ROUTES, useRoute, type Route } from './useRoute'
  * reflow.
  */
 const RIGHT_COLUMN = { key: 'paddrummer.right-column', fallback: 224, min: 180, max: 560 }
-/** Widest the left column is ever drawn, and the centre's own padding. */
-const LEFT_MAX = 224
+const LEFT_COLUMN = { key: 'paddrummer.left-column', fallback: 224, min: 176, max: 480 }
+/** The centre's own padding, which neither column may take. */
 const CENTRE_PADDING = 32
 
 const LABELS: Record<Route, string> = {
@@ -30,8 +30,10 @@ const LABELS: Record<Route, string> = {
   glossary: 'Glossary',
 }
 
-/** Pages that are read rather than played, so they take the whole width. */
-const READING: readonly Route[] = ['home', 'glossary']
+/** Read rather than played, and with nothing to pick from: one column. */
+const READING: readonly Route[] = ['home']
+/** Read, but with a contents list: a left column and no panel. */
+const CONTENTS: readonly Route[] = ['glossary']
 
 /**
  * The shell: a header with the nav, and three columns the current page fills.
@@ -74,28 +76,46 @@ function Shell() {
   // page says how much room its music needs; the shell knows what else is
   // competing for it.
   const reading = READING.includes(route)
+  const contents = CONTENTS.includes(route)
   const musicMin = useMusicWidth()
+
+  // Both columns compete with the stave for the same window, so each is capped
+  // assuming the other keeps at least its minimum. The music is served first;
+  // what is left over is what the panels may argue over.
+  const spare = useCallback(
+    (otherMin: number) => window.innerWidth - CENTRE_PADDING - musicMin - otherMin,
+    [musicMin],
+  )
+  const left = useColumnWidth({
+    ...LEFT_COLUMN,
+    edge: 'left',
+    max: useCallback(
+      () => Math.max(LEFT_COLUMN.min, Math.min(LEFT_COLUMN.max, spare(RIGHT_COLUMN.min))),
+      [spare],
+    ),
+  })
   const right = useColumnWidth({
     ...RIGHT_COLUMN,
     max: useCallback(
-      () =>
-        Math.max(
-          RIGHT_COLUMN.min,
-          Math.min(
-            RIGHT_COLUMN.max,
-            window.innerWidth - LEFT_MAX - CENTRE_PADDING - musicMin,
-          ),
-        ),
-      [musicMin],
+      () => Math.max(RIGHT_COLUMN.min, Math.min(RIGHT_COLUMN.max, spare(left.width))),
+      [spare, left.width],
     ),
   })
 
   return (
     <>
       <div
-        className={`layout ${panel ? '' : 'is-panel-hidden'} ${reading ? 'is-reading' : ''}`}
+        className={[
+          'layout',
+          panel ? '' : 'is-panel-hidden',
+          reading ? 'is-reading' : '',
+          contents ? 'is-contents' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         style={
           {
+            '--left-column': `${left.width}px`,
             '--right-column': `${right.width}px`,
             '--music-min': `${musicMin}px`,
           } as React.CSSProperties
@@ -128,7 +148,7 @@ function Shell() {
             {/* Acts on a column the reading pages do not have. Says what it
                 will do rather than what is showing: a toggle labelled with its
                 current state reads as a claim, not a button. */}
-            {reading ? null : (
+            {reading || contents ? null : (
               <button
                 type="button"
                 className="panel-toggle"
@@ -153,12 +173,28 @@ function Shell() {
           <HomePage navigate={navigate} />
         )}
 
-        {/* Sits on the boundary rather than inside either column, so neither
-            page nor panel has to know it exists. `right` is the column's own
-            width, which puts it on the edge at any size. */}
-        {panel && !reading ? (
+        {/* On the boundaries rather than inside either column, so neither page
+            nor panel has to know they exist. Each is placed by its column's own
+            width, which keeps it on the edge at any size. */}
+        {reading ? null : (
           <div
-            className="col-resizer"
+            className="col-resizer col-resizer-left"
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="List width"
+            aria-valuenow={left.width}
+            aria-valuemin={left.min}
+            tabIndex={0}
+            onPointerDown={left.onPointerDown}
+            onPointerMove={left.onPointerMove}
+            onPointerUp={left.onPointerUp}
+            onKeyDown={left.onKeyDown}
+          />
+        )}
+
+        {panel && !reading && !contents ? (
+          <div
+            className="col-resizer col-resizer-right"
             role="separator"
             aria-orientation="vertical"
             aria-label="Panel width"

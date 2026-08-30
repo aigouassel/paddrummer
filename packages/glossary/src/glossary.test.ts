@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GROUPS, GROUP_NAMES, TERMS, TERMS_BY_GROUP } from './glossary'
+import { GROUPS, GROUP_NAMES, TERMS, TERMS_BY_GROUP, slug } from './glossary'
 
 describe('glossary', () => {
   it('defines every term exactly once', () => {
@@ -30,6 +30,14 @@ describe('glossary', () => {
     for (const entry of TERMS) {
       expect(entry.see ?? [], entry.term).not.toContain(entry.term)
     }
+  })
+
+  it('gives every term a distinct anchor that is a legal id', () => {
+    // An id may not contain a space, and half the terms are two words, so a
+    // raw term used as a fragment links to nothing at all.
+    const slugs = TERMS.map((entry) => slug(entry.term))
+    expect(new Set(slugs).size).toBe(slugs.length)
+    for (const value of slugs) expect(value).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
   })
 
   it('files every term under a named group, and leaves no group empty', () => {
