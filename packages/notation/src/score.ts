@@ -15,17 +15,16 @@ import {
   Tuplet,
   Voice,
 } from 'vexflow'
-import { ZERO, add } from '@paddrummer/core/fraction'
-import { toBeats } from '@paddrummer/core/duration'
 import type { Stroke } from '@paddrummer/core/pattern'
 import {
+  type LineEvent,
   type Phrase,
-  type PhraseLine,
   isRest,
   meterText,
   placedStrokes,
 } from '@paddrummer/core/phrase'
 import { type TupletRatio, toVexDuration } from './vexDuration'
+import { FIXED_WIDTH, PADDING, WIDTH_PER_METER, planScore } from './systems'
 
 /**
  * Draws a phrase as snare notation.
@@ -40,6 +39,11 @@ import { type TupletRatio, toVexDuration } from './vexDuration'
  * voices on one stave, the right hand on an upper line with stems up and the
  * left on a lower line with stems down, so the eye can follow one hand without
  * losing the other.
+ *
+ * Anything long enough to need it is drawn as a chart: `systems.ts` decides
+ * where the barlines fall and how many bars go on a row, and each bar becomes
+ * its own `Stave`. A rudiment has no metre, so it has no barlines and is still
+ * a single stave stretched across the column, exactly as before.
  */
 
 /** Where a single-voice rudiment sits: the middle of the stave. */
@@ -75,16 +79,17 @@ const STAVE_TOP = 4
 const HEIGHT = 112
 /** Two voices hang stems below the stave, which needs room the single line does not. */
 const HEIGHT_TWO_LINES = 178
-const PADDING = 12
+/**
+ * Room left after a bar's last note, before its barline.
+ *
+ * The formatter justifies notes across exactly the width it is given, so
+ * handing it the whole bar puts the last notehead on the barline and half of
+ * it outside the stave. A single stave hid this — it was given the note area
+ * and inherited the clef's width as slack — but a row of bars has no such
+ * accident to rely on, so the gap is now asked for rather than hoped for.
+ */
+const BAR_TAIL = 14
 
-/** Room one note needs before the engraving starts to look cramped. */
-const WIDTH_PER_NOTE = 34
-/** Extra room per grace note: an ornament is drawn left of its main note. */
-const WIDTH_PER_GRACE = 16
-/** Clef and the formatter's own left margin. */
-const FIXED_WIDTH = 60
-/** A time signature takes room the clef alone does not. */
-const WIDTH_PER_METER = 28
 /**
  * Past this the stave stops looking like music and starts looking like a logo.
  * Callers stacking several staves pass a lower cap, so more of the sheet is
@@ -148,7 +153,7 @@ function buildRest(durationValue: Stroke['duration'], pitch: string): StaveNote 
  * bar that puts a triplet next to a quintuplet would close the first bracket
  * around notes belonging to the second.
  */
-function buildTuplets(line: PhraseLine, tickables: StaveNote[]): Tuplet[] {
+function buildTuplets(events: readonly LineEvent[], tickables: StaveNote[]): Tuplet[] {
   const tuplets: Tuplet[] = []
   let run: StaveNote[] = []
   let ratio: TupletRatio | null = null
@@ -156,7 +161,7 @@ function buildTuplets(line: PhraseLine, tickables: StaveNote[]): Tuplet[] {
   const sameRatio = (a: TupletRatio | null, b: TupletRatio | null): boolean =>
     a !== null && b !== null && a.numNotes === b.numNotes && a.notesOccupied === b.notesOccupied
 
-  line.events.forEach((event, index) => {
+  events.forEach((event, index) => {
     const { tuplet } = toVexDuration(event.duration)
     if (tuplet === null) {
       run = []
@@ -185,8 +190,16 @@ type BuiltLine = {
   beams: Beam[]
 }
 
-function buildLine(line: PhraseLine, pitch: string, stemDirection: number, label: string | null): BuiltLine {
-  const tickables = line.events.map((event) =>
+function buildLine(
+  events: readonly LineEvent[],
+  pitch: string,
+  stemDirection: number,
+  /** Names the part once, at its head; null on every bar but the first. */
+  label: string | null,
+  /** Whether each note is stamped with the hand that plays it. */
+  perNoteHand: boolean,
+): BuiltLine {
+  const tickables = events.map((event) =>
     isRest(event) ? buildRest(event.duration, pitch) : buildNote(event, pitch, stemDirection),
   )
 
@@ -195,7 +208,7 @@ function buildLine(line: PhraseLine, pitch: string, stemDirection: number, label
   // label at the head of each line names the convention and then gets out of
   // the way.
   if (label !== null) {
-    const first = tickables.find((_, i) => !isRest(line.events[i]!))
+    const first = tickables.find((_, i) => !isRest(events[i]!))
     first?.addModifier(
       new Annotation(label).setVerticalJustification(
         stemDirection === Stem.UP
@@ -206,13 +219,25 @@ function buildLine(line: PhraseLine, pitch: string, stemDirection: number, label
     )
   }
 
+  // On a single line every note is labelled, because there the sticking is the
+  // whole point and nothing else says which hand plays.
+  if (perNoteHand) {
+    events.forEach((event, index) => {
+      if (isRest(event)) return
+      tickables[index]!.addModifier(
+        new Annotation(event.hand).setVerticalJustification(Annotation.VerticalJustify.BOTTOM),
+        0,
+      )
+    })
+  }
+
   // Order matters, and not obviously. Constructing a Tuplet rewrites its
   // notes' tick values in place (three eighths become 2/3 of an eighth each),
   // but a Voice caches its total the moment tickables are added. Building the
   // voice first leaves it believing a triplet group lasts a beat and a half,
   // and the formatter then spreads that voice over too much of the bar — which
   // is invisible on its own and pulls badly out of line against a second voice.
-  const tuplets = buildTuplets(line, tickables)
+  const tuplets = buildTuplets(events, tickables)
 
   // SOFT mode: a rudiment's repeating unit is rarely a whole bar — a single
   // stroke roll is two 16ths — and strict mode would reject it as incomplete.
@@ -226,20 +251,6 @@ function buildLine(line: PhraseLine, pitch: string, stemDirection: number, label
   }
 }
 
-/** Every distinct beat at which either line has an event: what sets the width. */
-function columnCount(phrase: Phrase): number {
-  const starts = new Set<string>()
-  for (const line of phrase.lines) {
-    let at = ZERO
-    for (const event of line.events) {
-      starts.add(`${at[0]}/${at[1]}`)
-      at = add(at, toBeats(event.duration))
-    }
-  }
-  // Distinct positions, not events: two hands landing together share a column.
-  return [...starts].length || 1
-}
-
 export function renderScore(
   host: HTMLDivElement,
   phrase: Phrase,
@@ -251,81 +262,96 @@ export function renderScore(
   if (phrase.lines.length === 0 || placed.length === 0) return { noteElements: [] }
 
   const twoLines = phrase.lines.length > 1
-  const height = twoLines ? HEIGHT_TWO_LINES : HEIGHT
+  const systemHeight = twoLines ? HEIGHT_TWO_LINES : HEIGHT
 
   // Scaling the whole context rather than laying out at the full pixel width
   // keeps every proportion VexFlow was designed around — note spacing, beam
   // thickness, the gap between a grace note and its main note — and simply
   // makes them bigger. Formatting to a very wide stave instead would stretch
-  // the spacing while leaving the glyphs small.
-  //
-  // How far it can scale is set by the music, not the container: eight notes
-  // can be drawn large in a given column, thirty-four cannot. Below 1x the
-  // stave keeps its size and overflows into a horizontal scroll rather than
-  // shrinking the notes past readability.
-  const graceNotes = placed.reduce((total, { stroke }) => total + (stroke.grace?.length ?? 0), 0)
-  const neededWidth =
-    PADDING * 2 +
-    FIXED_WIDTH +
-    (phrase.meter ? WIDTH_PER_METER : 0) +
-    columnCount(phrase) * WIDTH_PER_NOTE +
-    graceNotes * WIDTH_PER_GRACE
-  const zoom = Math.min(maxZoom, Math.max(1, width / neededWidth))
-  const logicalWidth = Math.max(neededWidth, width / zoom)
+  // the spacing while leaving the glyphs small. How far it can scale is set by
+  // the music, not the container, and never goes below 1x; `planScore` has the
+  // reasoning and the arithmetic.
+  const { systems, zoom, logicalWidth } = planScore(phrase, width, maxZoom)
 
   const renderer = new Renderer(host, Renderer.Backends.SVG)
-  renderer.resize(logicalWidth * zoom, height * zoom)
+  renderer.resize(logicalWidth * zoom, systemHeight * systems.length * zoom)
   const context = renderer.getContext()
   context.scale(zoom, zoom)
 
-  const stave = new Stave(PADDING, STAVE_TOP, logicalWidth - PADDING * 2, {
-    spaceAboveStaffLn: twoLines ? SPACE_ABOVE_LINES_TWO : SPACE_ABOVE_LINES,
-  })
-  stave.addClef('percussion')
-  if (phrase.meter) stave.addTimeSignature(meterText(phrase.meter))
-  stave.setContext(context).draw()
+  // One array per line, indexed by that line's own event index. Bars fill it
+  // in as they are built, which leaves the playhead mapping at the end
+  // indifferent to how the music was distributed across the page.
+  const tickablesByLine: StaveNote[][] = phrase.lines.map(() => [])
 
-  const built = phrase.lines.map((line, index) => {
-    if (!twoLines) return buildLine(line, PITCH, Stem.UP, null)
-    const upper = index === 0
-    return buildLine(
-      line,
-      upper ? UPPER_PITCH : LOWER_PITCH,
-      upper ? Stem.UP : Stem.DOWN,
-      line.hand,
-    )
-  })
+  systems.forEach((bars, systemIndex) => {
+    const firstSystem = systemIndex === 0
+    // The time signature is printed once, at the head of the piece; the clef
+    // is repeated at the head of every row, as it is on paper.
+    const meterWidth = firstSystem && phrase.meter ? WIDTH_PER_METER : 0
+    const notesWidth = logicalWidth - PADDING * 2 - FIXED_WIDTH - meterWidth
+    const demand = bars.reduce((total, bar) => total + bar.width, 0) || 1
 
-  // On a single line every note is labelled with its hand, because there the
-  // sticking is the whole point and nothing else says which hand plays.
-  if (!twoLines) {
-    const line = phrase.lines[0]!
-    built[0]!.tickables.forEach((tickable, index) => {
-      const event = line.events[index]!
-      if (isRest(event)) return
-      tickable.addModifier(
-        new Annotation(event.hand).setVerticalJustification(Annotation.VerticalJustify.BOTTOM),
-        0,
-      )
+    let x = PADDING
+    const y = STAVE_TOP + systemIndex * systemHeight
+
+    bars.forEach((bar, barIndex) => {
+      const head = barIndex === 0
+      const furniture = head ? FIXED_WIDTH + meterWidth : 0
+      // Bars share the row in proportion to what they hold, so a bar of
+      // sixteenths is not squeezed into the same span as a bar of quarters.
+      const staveWidth = furniture + (bar.width / demand) * notesWidth
+
+      const stave = new Stave(x, y, staveWidth, {
+        spaceAboveStaffLn: twoLines ? SPACE_ABOVE_LINES_TWO : SPACE_ABOVE_LINES,
+      })
+      if (head) stave.addClef('percussion')
+      if (head && firstSystem && phrase.meter) stave.addTimeSignature(meterText(phrase.meter))
+      stave.setContext(context).draw()
+
+      const built = phrase.lines.map((phraseLine, lineIndex) => {
+        const slice = bar.slices[lineIndex]!
+        const events = phraseLine.events.slice(slice.start, slice.end)
+        const line = twoLines
+          ? buildLine(
+              events,
+              lineIndex === 0 ? UPPER_PITCH : LOWER_PITCH,
+              lineIndex === 0 ? Stem.UP : Stem.DOWN,
+              // The label names a convention, so it belongs at the head of the
+              // part and nowhere else.
+              firstSystem && head ? phraseLine.hand : null,
+              false,
+            )
+          : buildLine(events, PITCH, Stem.UP, null, true)
+
+        line.tickables.forEach((tickable, i) => {
+          tickablesByLine[lineIndex]![slice.start + i] = tickable
+        })
+        return line
+      })
+
+      // A line can run out of bars before another does, and a voice with no
+      // tickables in it is one the formatter cannot place.
+      const voices = built.filter((line) => line.tickables.length > 0).map((line) => line.voice)
+      if (voices.length > 0) {
+        new Formatter().joinVoices(voices).format(voices, staveWidth - furniture - BAR_TAIL)
+      }
+
+      for (const line of built) {
+        if (line.tickables.length === 0) continue
+        line.voice.draw(context, stave)
+        for (const beam of line.beams) beam.setContext(context).draw()
+        for (const tuplet of line.tuplets) tuplet.setContext(context).draw()
+      }
+
+      x += staveWidth
     })
-  }
-
-  const voices = built.map((line) => line.voice)
-  new Formatter()
-    .joinVoices(voices)
-    .format(voices, logicalWidth - PADDING * 2 - 60 - (phrase.meter ? WIDTH_PER_METER : 0))
-
-  for (const line of built) {
-    line.voice.draw(context, stave)
-    for (const beam of line.beams) beam.setContext(context).draw()
-    for (const tuplet of line.tuplets) tuplet.setContext(context).draw()
-  }
+  })
 
   // Hand the playhead its notes in playing order. `placedStrokes` already
   // merged and sorted the lines; each entry says which line and which event it
   // came from, which is exactly the coordinate the built tickables are held by.
   const noteElements = placed.map(
-    ({ lineIndex, eventIndex }) => built[lineIndex]?.tickables[eventIndex]?.getSVGElement(),
+    ({ lineIndex, eventIndex }) => tickablesByLine[lineIndex]?.[eventIndex]?.getSVGElement(),
   )
 
   return { noteElements }
