@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { toNumber } from '@paddrummer/core/fraction'
 import { barBeats, isRest, placedStrokes } from '@paddrummer/core/phrase'
-import { ASSET_DIR, BOOK_PAGES, BOOK_PAGES_BY_NUMBER, sourceFile } from './stickControl'
+import { ASSET_DIR, BOOK_PAGES, BOOK_PAGES_BY_NUMBER, sourceFile } from './index'
 
 const handsOf = (page: number, n: number) =>
   placedStrokes(BOOK_PAGES_BY_NUMBER.get(page)!.exercises.find((e) => e.n === n)!.phrase)
