@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { GROUPS, GROUP_NAMES, TERMS_BY_GROUP, slug } from '@paddrummer/glossary'
+import { useHashTail } from './useRoute'
 
 /**
  * What the words mean.
@@ -11,8 +13,21 @@ import { GROUPS, GROUP_NAMES, TERMS_BY_GROUP, slug } from '@paddrummer/glossary'
  * The contents list carries every term, not just the groups. Thirty-five is
  * too many to scan in the body but few enough to list, and the reason to open
  * a glossary is usually one word you already have in mind.
+ *
+ * Links go to `#/glossary/<term>` rather than to a bare `#<term>`, because the
+ * app routes on the hash: a plain fragment link replaces the route with
+ * something that is not one, and lands you on the landing page. The page
+ * therefore does its own scrolling, which the browser would otherwise have
+ * done for free.
  */
 export function GlossaryPage() {
+  const target = useHashTail()
+
+  useEffect(() => {
+    if (!target) return
+    document.getElementById(target)?.scrollIntoView({ block: 'center' })
+  }, [target])
+
   return (
     <>
       <aside className="col col-left">
@@ -24,7 +39,12 @@ export function GlossaryPage() {
               <ul className="catalogue">
                 {TERMS_BY_GROUP(group).map((entry) => (
                   <li key={entry.term}>
-                    <a href={`#${slug(entry.term)}`}>{entry.term}</a>
+                    <a
+                      href={`#/glossary/${slug(entry.term)}`}
+                      className={slug(entry.term) === target ? 'is-selected' : ''}
+                    >
+                      {entry.term}
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -49,7 +69,11 @@ export function GlossaryPage() {
             <h3 id={`group-${group}`}>{GROUP_NAMES[group]}</h3>
             <dl className="glossary">
               {TERMS_BY_GROUP(group).map((entry) => (
-                <div key={entry.term} className="glossary-entry" id={slug(entry.term)}>
+                <div
+                  key={entry.term}
+                  className={`glossary-entry ${slug(entry.term) === target ? 'is-current' : ''}`}
+                  id={slug(entry.term)}
+                >
                   <dt>{entry.term}</dt>
                   <dd>
                     {entry.definition}
@@ -60,7 +84,7 @@ export function GlossaryPage() {
                         {entry.see.map((other, i) => (
                           <span key={other}>
                             {i > 0 ? ', ' : ''}
-                            <a href={`#${slug(other)}`}>{other.toLowerCase()}</a>
+                            <a href={`#/glossary/${slug(other)}`}>{other.toLowerCase()}</a>
                           </span>
                         ))}
                         .

@@ -870,7 +870,7 @@ select {
 }
 
 .glossary-entry + .glossary-entry { margin-top: 0.3rem; }
-.glossary-entry:target { border-left-color: var(--accent); }
+.glossary-entry.is-current { border-left-color: var(--accent); }
 
 .glossary dt { font-weight: 600; }
 
@@ -895,3 +895,4 @@ select {
 }
 
 .catalogue a:hover { color: var(--fg); background: var(--card); }
+.catalogue a.is-selected { color: var(--accent); }
