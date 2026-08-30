@@ -43,7 +43,7 @@ body {
      repertoire is the pad-groove triple-stroke roll, twenty-four sextuplet
      slots, which wants ~900px. Below that the chart scrolls sideways, and a
      chart you have to scroll is not a chart. Panels reflow; music does not. */
-  grid-template-columns: minmax(11rem, 13rem) minmax(0, 1fr) minmax(12rem, 14rem);
+  grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr) minmax(12rem, 14rem);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'top top top'
@@ -64,6 +64,21 @@ body {
 .topbar p { margin: 0; color: var(--muted); font-size: 0.85rem; }
 
 .nav { display: flex; gap: 0.25rem; margin-left: 0.75rem; }
+
+/* Pushed to the far end, away from the pages it does not choose between. */
+.panel-toggle {
+  margin-left: auto;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.panel-toggle:hover { color: var(--fg); border-color: var(--accent); }
 
 .nav button {
   padding: 0.35rem 0.9rem;
@@ -93,6 +108,14 @@ body {
   overflow-y: auto;
   min-width: 0;
 }
+
+/* Collapsed by shrinking the track rather than hiding the column in place: the
+   centre only gains the room if the grid stops reserving it. Not quite to
+   nothing, though — a gutter is left so the music has a margin to end against
+   instead of running into the window edge. The left column takes a share of
+   the freed width too, since the lists are what it was short of. */
+.layout.is-panel-hidden { grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) 1.5rem; }
+.layout.is-panel-hidden .col-right { display: none; }
 
 .col-left { grid-area: left; border-right: 1px solid var(--line); }
 .col-right { grid-area: right; border-left: 1px solid var(--line); }
