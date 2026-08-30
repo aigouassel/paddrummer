@@ -451,17 +451,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@paddrummer/catalogue@workspace:^, @paddrummer/catalogue@workspace:packages/catalogue":
-  version: 0.0.0-use.local
-  resolution: "@paddrummer/catalogue@workspace:packages/catalogue"
-  dependencies:
-    "@paddrummer/core": "workspace:^"
-    "@paddrummer/exercises": "workspace:^"
-    "@paddrummer/rudiments": "workspace:^"
-    "@paddrummer/videos": "workspace:^"
-  languageName: unknown
-  linkType: soft
-
 "@paddrummer/core@workspace:^, @paddrummer/core@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@paddrummer/core@workspace:packages/core"
@@ -520,11 +509,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@paddrummer/web@workspace:apps/web"
   dependencies:
-    "@paddrummer/catalogue": "workspace:^"
     "@paddrummer/core": "workspace:^"
-    "@paddrummer/exercises": "workspace:^"
     "@paddrummer/notation": "workspace:^"
+    "@paddrummer/rudiments": "workspace:^"
     "@paddrummer/stick-control": "workspace:^"
+    "@paddrummer/videos": "workspace:^"
     "@types/react": "npm:^19.2.18"
     "@types/react-dom": "npm:^19.2.4"
     "@vitejs/plugin-react": "npm:^5"

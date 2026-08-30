@@ -176,6 +176,23 @@ export const RUDIMENTS_BY_ID: ReadonlyMap<string, Rudiment> = new Map(
   RUDIMENTS.map((r) => [r.id, r]),
 )
 
+/**
+ * The four PAS groups, in the order the published list numbers them.
+ *
+ * The numbering is part of the source, not a presentation choice: a drummer
+ * looking for no. 16 expects it under Diddle Rudiments because that is where
+ * the list puts it, so the names travel with the data rather than living in
+ * whatever happens to be displaying it.
+ */
+export const CATEGORIES: readonly RudimentCategory[] = ['roll', 'diddle', 'flam', 'drag']
+
+export const CATEGORY_NAMES: Record<RudimentCategory, string> = {
+  roll: 'I. Roll Rudiments',
+  diddle: 'II. Diddle Rudiments',
+  flam: 'III. Flam Rudiments',
+  drag: 'IV. Drag Rudiments',
+}
+
 export const rudimentsInCategory = (category: RudimentCategory): Rudiment[] =>
   RUDIMENTS.filter((r) => r.category === category)
 

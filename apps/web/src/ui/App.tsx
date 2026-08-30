@@ -1,17 +1,21 @@
 import { EngineProvider } from './EngineContext'
-import { PracticePage } from './PracticePage'
-import { ExercisesPage } from './ExercisesPage'
+import { RudimentsPage } from './RudimentsPage'
 import { StickControlPage } from './StickControlPage'
+import { ExperimentsPage } from './ExperimentsPage'
 import { ROUTES, useRoute, type Route } from './useRoute'
 
 const LABELS: Record<Route, string> = {
-  practice: 'Practice',
-  exercises: 'Exercises',
+  rudiments: 'Rudiments',
   'stick-control': 'Stick Control',
+  experiments: 'Experiments',
 }
 
 /**
  * The shell: a header with the nav, and three columns the current page fills.
+ *
+ * The three pages are the three bodies of material, each with its own source:
+ * the published forty, a printed book, and whatever is still being read off a
+ * recording.
  *
  * Pages render the columns themselves as a fragment rather than being handed
  * a slot each. The grid areas do the placing, so every page inherits the same
@@ -40,12 +44,12 @@ export function App() {
           </nav>
         </header>
 
-        {route === 'exercises' ? (
-          <ExercisesPage />
-        ) : route === 'stick-control' ? (
+        {route === 'stick-control' ? (
           <StickControlPage />
+        ) : route === 'experiments' ? (
+          <ExperimentsPage />
         ) : (
-          <PracticePage />
+          <RudimentsPage />
         )}
       </div>
     </EngineProvider>

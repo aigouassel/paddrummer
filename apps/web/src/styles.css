@@ -395,6 +395,18 @@ select {
 
 .sheet { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
 
+/* Under the chart rather than beside its bars: the stave already names the
+   sections, so this is the reading behind each one, read once and not while
+   playing. */
+.section-notes { gap: 0.85rem; margin-top: 1.5rem; }
+
+.section-notes li {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--line);
+}
+
 .sheet-row {
   border: 1px solid var(--line);
   border-radius: 0.6rem;

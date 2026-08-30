@@ -1,9 +1,9 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
-export const ROUTES = ['practice', 'exercises', 'stick-control'] as const
+export const ROUTES = ['rudiments', 'stick-control', 'experiments'] as const
 export type Route = (typeof ROUTES)[number]
 
-const DEFAULT: Route = 'practice'
+const DEFAULT: Route = 'rudiments'
 
 const isRoute = (value: string): value is Route => (ROUTES as readonly string[]).includes(value)
 

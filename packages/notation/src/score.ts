@@ -96,9 +96,25 @@ const BAR_TAIL = 14
  * all of them: rows of differing height would put the staves at uneven
  * intervals down the page, which is more distracting than the whitespace.
  */
-const SECTION_HEADROOM = 26
-/** How far above the stave the label sits, clear of accents and grace stems. */
-const SECTION_SHIFT = -14
+const SECTION_HEADROOM = 32
+/**
+ * How far above the stave the label sits.
+ *
+ * Clear of accents and grace stems, and clear of the hand label a two-voice
+ * phrase puts over its first note — which is the one thing at this height that
+ * is not part of the music.
+ */
+const SECTION_SHIFT = -24
+/**
+ * Section labels are set in the page's own font, not VexFlow's.
+ *
+ * `Stave.setSection` draws through the music font, whose space glyph is
+ * narrow enough that "fill in gaps with 8ths" arrives as one long word. These
+ * labels are prose — the words a player said — so they are drawn directly with
+ * `fillText` and a text font instead.
+ */
+const SECTION_FONT = 'system-ui, -apple-system, Segoe UI, sans-serif'
+const SECTION_FONT_SIZE = 12
 
 /**
  * Past this the stave stops looking like music and starts looking like a logo.
@@ -317,10 +333,16 @@ export function renderScore(
       })
       if (head) stave.addClef('percussion')
       if (head && firstSystem && phrase.meter) stave.addTimeSignature(meterText(phrase.meter))
+      stave.setContext(context).draw()
+
       // No box around it: these are the words a player said over the music, not
       // rehearsal letters an ensemble is counting from.
-      if (bar.label) stave.setSection(bar.label, SECTION_SHIFT, 0, undefined, false)
-      stave.setContext(context).draw()
+      if (bar.label) {
+        context.save()
+        context.setFont(SECTION_FONT, SECTION_FONT_SIZE, 'normal')
+        context.fillText(bar.label, x + furniture, stave.getYForTopText(1.5) + SECTION_SHIFT)
+        context.restore()
+      }
 
       const built = phrase.lines.map((phraseLine, lineIndex) => {
         const slice = bar.slices[lineIndex]!
