@@ -1,0 +1,22 @@
+{
+  "name": "@paddrummer/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./fraction": "./src/fraction.ts",
+    "./duration": "./src/duration.ts",
+    "./pattern": "./src/pattern.ts",
+    "./phrase": "./src/phrase.ts",
+    "./piece": "./src/piece.ts",
+    "./timeline": "./src/timeline.ts",
+    "./scoring": "./src/scoring.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@paddrummer/rudiments": "workspace:^"
+  }
+}

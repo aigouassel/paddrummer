@@ -1,0 +1,19 @@
+{
+  "name": "@paddrummer/catalogue",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/catalogue.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paddrummer/core": "workspace:^",
+    "@paddrummer/exercises": "workspace:^",
+    "@paddrummer/rudiments": "workspace:^",
+    "@paddrummer/videos": "workspace:^"
+  }
+}

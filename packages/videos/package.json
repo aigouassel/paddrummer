@@ -1,0 +1,21 @@
+{
+  "name": "@paddrummer/videos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/padGrooves.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paddrummer/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@paddrummer/exercises": "workspace:^",
+    "@paddrummer/rudiments": "workspace:^",
+    "@paddrummer/stick-control": "workspace:^"
+  }
+}

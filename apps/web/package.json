@@ -1,0 +1,28 @@
+{
+  "name": "@paddrummer/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paddrummer/catalogue": "workspace:^",
+    "@paddrummer/core": "workspace:^",
+    "@paddrummer/exercises": "workspace:^",
+    "@paddrummer/notation": "workspace:^",
+    "@paddrummer/stick-control": "workspace:^",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^5",
+    "vite": "^7"
+  }
+}

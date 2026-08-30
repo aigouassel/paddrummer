@@ -1,0 +1,20 @@
+{
+  "name": "@paddrummer/notation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/score.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paddrummer/core": "workspace:^",
+    "vexflow": "^5.0.0"
+  },
+  "devDependencies": {
+    "@paddrummer/stick-control": "workspace:^"
+  }
+}

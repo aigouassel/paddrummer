@@ -1,0 +1,16 @@
+{
+  "name": "@paddrummer/rudiments",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/rudiments.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paddrummer/core": "workspace:^"
+  }
+}

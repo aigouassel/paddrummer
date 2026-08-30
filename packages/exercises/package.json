@@ -1,0 +1,18 @@
+{
+  "name": "@paddrummer/exercises",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/exercises.ts",
+    "./studies": "./src/studies.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@paddrummer/core": "workspace:^",
+    "@paddrummer/rudiments": "workspace:^"
+  }
+}

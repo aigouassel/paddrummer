@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client"],
+
+    // The onset detector is plain JS so its source can be inlined into an
+    // AudioWorklet verbatim while still being imported by tests.
+    "allowJs": true
+  },
+  "include": ["src", "vite.config.ts"]
+}
