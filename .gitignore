@@ -8,19 +8,8 @@ dist/
 !.yarn/releases
 .pnp.*
 
-# Video source material. The clips are copyrighted and kept for personal
-# practice, so none of them are committed. This is an allowlist rather than a
-# list of extensions to exclude: default-deny means a format nobody thought of
-# is out too.
-#
-# The photographed book pages under packages/stick-control/sources/ are the
-# deliberate exception — they ARE committed, so an exercise can be put beside
-# its page from a clone alone. No rule here mentions them, so that nothing
-# claims otherwise: a pattern saying "ignored" over files git actually tracks
-# is how the previous arrangement misled for three weeks.
-
-packages/videos/sources/**
-!packages/videos/sources/**/
+packages/videos/sources/**/.frames-*
+!packages/videos/sources/**/slow
 !packages/videos/sources/**/grid.json
 !packages/videos/sources/**/*.md
 

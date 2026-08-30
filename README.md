@@ -17,7 +17,7 @@ metronome while the app listens to your pad through the microphone.
 
 ## Architecture
 
-A Yarn workspace monorepo — seven packages and one app:
+A Yarn workspace monorepo — six packages and one app:
 
 ```
 packages/core           Fraction, duration, pattern, phrase, piece, timeline,
@@ -25,9 +25,9 @@ packages/core           Fraction, duration, pattern, phrase, piece, timeline,
                         rudiment, two for hand independence. Depends on nothing.
 packages/rudiments      The 40 PAS rudiments as data.
 packages/exercises      Studies, and the guided routines built from them.
+                        No page reads it at present; see "Three pages" below.
 packages/stick-control  Stone's book, transcribed from photographs.
 packages/videos         Transcriptions read off video.
-packages/catalogue      The picker model; the one place that knows all of it.
 packages/notation       Adapter from a Phrase to a VexFlow stave, one voice or two.
 apps/web                audio/ (scheduler, click voice), input/ (keyboard or
                         microphone), ui/ (one file per page plus the panels).
@@ -35,7 +35,8 @@ apps/web                audio/ (scheduler, click voice), input/ (keyboard or
 
 The material packages divide by **provenance**: rudiments, stick-control and
 videos come from outside the app, exercises is what the app wrote itself. So a
-new book is a new package and a new routine is not.
+new book is a new package and a new routine is not. The three pages divide the
+same way, one per source, so a page reads a package rather than a mixture.
 
 `audio` and `input` stay inside the app deliberately. They are mutually
 recursive — the engine owns the input switching, the microphone source needs
@@ -273,10 +274,11 @@ separable. A test refuses to let a piece marked `rhythm` ship without saying so
 in its own note, so the distinction reaches the app rather than staying in a
 doc.
 
-It plays on the **Practice** page, which now offers any piece rather than only
-a rudiment — `@paddrummer/catalogue` groups the 40 rudiments, the 18 studies and
-the grooves into one picker. That also closed a gap: the studies existed but
-could only be met inside a routine, at the routine's tempo.
+It plays on the **Experiments** page, as one twenty-bar chart rather than five
+separate pieces: the clip is a single take in which he changes what he is doing
+four times and says so, and his captions become the section marks. The bars are
+written out at the length they were played, counted off the grid map rather
+than by ear.
 
 [`docs/transcribing-video.md`](docs/transcribing-video.md) records the method,
 the four automated approaches that failed and why, and what is still open.

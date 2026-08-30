@@ -38,7 +38,12 @@ body {
    the bottom of the right-hand column sits under the toolbar. */
 .layout {
   display: grid;
-  grid-template-columns: minmax(15rem, 19rem) minmax(0, 1fr) minmax(16rem, 21rem);
+  /* The side columns are as narrow as their contents tolerate, because the
+     centre has a hard floor the sides do not: the densest bar in the
+     repertoire is the pad-groove triple-stroke roll, twenty-four sextuplet
+     slots, which wants ~900px. Below that the chart scrolls sideways, and a
+     chart you have to scroll is not a chart. Panels reflow; music does not. */
+  grid-template-columns: minmax(11rem, 13rem) minmax(0, 1fr) minmax(12rem, 14rem);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'top top top'
@@ -81,7 +86,10 @@ body {
 }
 
 .col {
-  padding: 1.5rem;
+  /* Tighter left and right than top and bottom: horizontal room is what the
+     stave is short of, and a panel loses less by giving it up than the music
+     gains by taking it. */
+  padding: 1.5rem 1rem;
   overflow-y: auto;
   min-width: 0;
 }
@@ -391,7 +399,7 @@ select {
   overflow: hidden;
 }
 
-.worksheet { overflow-y: auto; padding: 1.5rem; }
+.worksheet { overflow-y: auto; padding: 1.5rem 1rem; }
 
 .sheet { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
 
@@ -492,7 +500,7 @@ select {
 
 /* The book page number, so the left column reads like a contents page. */
 .book-page-no {
-  display: inline-block;
+  flex: none;
   min-width: 2.2rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -553,6 +561,11 @@ select {
 
 .catalogue button {
   width: 100%;
+  /* Flex rather than inline text, so a name too long for the column wraps
+     under itself instead of under its number. The number is a flex item and
+     the name an anonymous one, which is exactly the hanging indent wanted. */
+  display: flex;
+  gap: 0.15rem;
   padding: 0.4rem 0.55rem;
   border: 1px solid transparent;
   border-radius: 0.4rem;

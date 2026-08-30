@@ -27,7 +27,7 @@ Yarn 4 is pinned per-project via `.yarnrc.yml`; use `yarn`, not `npm`.
 
 ## Architecture
 
-A Yarn workspace monorepo: seven packages and one app.
+A Yarn workspace monorepo: six packages and one app.
 
 ```
 packages/
@@ -35,10 +35,10 @@ packages/
                   timeline, scoring. Depends on nothing.
   rudiments/      The 40 PAS rudiments as data.
   exercises/      Studies and the guided routines built from them — the
-                  material the app authored, as opposed to the three below.
+                  material the app authored, as opposed to the two below.
+                  No page reads it at present; see "Three pages".
   stick-control/  Stone's book, transcribed from photographs.
   videos/         Transcriptions read off video.
-  catalogue/      The picker model. The one place that knows all the material.
   notation/       Adapter from a Phrase to a VexFlow stave.
 apps/
   web/            audio/ (AudioContext, lookahead scheduler, click voice),
@@ -56,14 +56,28 @@ recursive — the engine owns the input switching, and the microphone source
 needs the worklet — and a package boundary between them would be a cycle rather
 than a boundary.
 
-Three pages routed on the URL hash: **Practice**, **Exercises**, **Stick
-Control**. They share one audio engine, so calibration and input choice survive
-navigation. They divide by *interaction model*, not by subject — Practice is one
-piece at your tempo, Exercises a routine that drives itself, Stick Control
-browsing a source — which is the axis to keep when adding material.
-`@paddrummer/catalogue` is Practice's side of that: everything playable on its
-own, grouped, each entry carrying what a picker needs so the component does not
-branch on kind.
+Three pages routed on the URL hash: **Rudiments**, **Stick Control**,
+**Experiments**. They share one audio engine, so calibration and input choice
+survive navigation. They divide by **provenance**, the same axis the material
+packages use, so a page reads one package rather than a mixture: the published
+forty, a printed book, and whatever is still being read off a recording. That
+is the axis to keep when adding material — a new book is a new package *and* a
+new page; a new clip joins Experiments.
+
+This used to be an interaction-model split (one piece at your tempo / a routine
+that drives itself / browsing a source), and the change is worth understanding
+rather than reverting by habit. That axis stopped discriminating: three of the
+pages had become the same interaction — browse a list, play one thing — while
+the subject matter they mixed was what actually differed. `@paddrummer/catalogue`
+existed only to mix the sources back into one picker and is gone with it.
+
+Experiments is **not** the videos page, despite currently holding only video
+transcriptions. Its axis is settled reference versus still being worked out, so
+its left column is a list of groups from the start.
+
+`@paddrummer/exercises` survives with its tests and no consumer. The routines
+are mixes of the rudiments rather than experiments, and they had no page to
+move to; the package is kept for when they earn one back.
 
 Four load-bearing decisions, each of which is easy to break by accident:
 
@@ -71,8 +85,8 @@ Four load-bearing decisions, each of which is easy to break by accident:
 Rendering, playback and scoring are three readers of one data structure, so a
 correctly-modelled rudiment is automatically playable, drawable and scorable.
 This is no longer a convention: `tsconfig.base.json` sets `lib: ["ES2022"]` with
-no DOM, so `window`, `document` and `AudioContext` are *type errors* in six of
-the seven packages. `notation` adds DOM back because VexFlow's own types
+no DOM, so `window`, `document` and `AudioContext` are *type errors* in five of
+the six packages. `notation` adds DOM back because VexFlow's own types
 reference SVG and canvas elements.
 
 The rule extends to tests: a test *about* notation belongs in `notation`, even
@@ -82,7 +96,9 @@ uses has a glyph. Two other test-only edges exist for the same reason:
 `core` devDepends on `rudiments` (the model's hard cases are checked against
 real repertoire, not fixtures), and `videos` on the other three material
 packages (to assert that nothing but a groove carries a `part`). All three are
-devDependencies, and none of them is a runtime cycle.
+devDependencies, and none of them is a runtime cycle. `videos` still devDepends
+on `exercises` for that last check, which is the one thing keeping the package
+from being dead weight.
 
 **A `Phrase` is the currency.** One line for a rudiment, two for hand
 independence, where two strokes can fall on the same beat. Rests are modelled
@@ -95,6 +111,14 @@ feels like it; the scheduler runs on its own timer against the audio clock.
 `Sequencer` owns only "which notes fall due in the next ~120ms", which makes it
 a pure function of a timestamp and testable with a fake clock. React subscribes
 to the engine for display only.
+
+**Layout is arithmetic; drawing is VexFlow.** `renderScore` needs a real
+`HTMLDivElement` and an SVG backend, so nothing inside it can be tested here.
+Everything deciding *where the music goes* — where the barlines fall, how many
+bars fit a row, which row a section opens — lives in `packages/notation/src/systems.ts`
+with no VexFlow and no DOM in it, and is tested. A system is a row of staves,
+one per bar, which is also what puts beams and tuplets inside the bar they
+belong to. Keep new layout decisions on that side of the line.
 
 **Durations are lengths of time, not glyphs.** A 16th-note triplet is `1/6` of a
 beat. `packages/notation/src/vexDuration.ts` is the only place that knows how one length
@@ -165,6 +189,15 @@ bpm) and the onset peak at every sixteenth slot across the clip. It is what
 makes a transcription checkable by someone holding only the repository — no
 video, no librosa, no ear — which matters more here than for the book, because
 a clip cannot be re-photographed from a shelf.
+
+A clip is transcribed as **one chart, not a set of exercises**: a take in which
+the player changes what he is doing and says so is one performance, and reading
+it any other way turns pedagogy into a menu. Sections keep their own evidence —
+bar range, time range, and how much was actually seen — and assemble into a
+single phrase whose section marks are the player's own captions. Repeats are
+written out at the length they were played, and that length comes from the bar
+range in `grid.json`, divided by the length of the bar written here. Nothing
+declares a repeat count; the arithmetic closes or the tests fail.
 
 `my.video-grid.py` reads rhythm off the audio and deliberately refuses to
 answer "how many notes are there?" — onset strength is a continuum, and

@@ -1,13 +1,18 @@
-import { useRef, useState } from 'react'
-import { GROOVE_SECTIONS, PAD_GROOVE, playedTimes, type PadGroove } from '@paddrummer/videos'
-import { barBeats, meterText } from '@paddrummer/core/phrase'
-import { toNumber } from '@paddrummer/core/fraction'
-import { usePractice } from './usePractice'
-import { useSpacebarToggle } from './useSpacebarToggle'
-import { useElementWidth } from './useElementWidth'
-import { Score, MIN_SCORE_WIDTH } from './Score'
-import { InputPanel } from './InputPanel'
-import { ScorePanel } from './ScorePanel'
+import { useRef, useState } from "react";
+import {
+  GROOVE_SECTIONS,
+  PAD_GROOVE,
+  playedTimes,
+  type PadGroove,
+} from "@paddrummer/videos";
+import { barBeats, meterText } from "@paddrummer/core/phrase";
+import { toNumber } from "@paddrummer/core/fraction";
+import { usePractice } from "./usePractice";
+import { useSpacebarToggle } from "./useSpacebarToggle";
+import { useElementWidth } from "./useElementWidth";
+import { Score, MIN_SCORE_WIDTH } from "./Score";
+import { InputPanel } from "./InputPanel";
+import { ScorePanel } from "./ScorePanel";
 
 /**
  * Work in progress: material the app is still figuring out how to read.
@@ -18,34 +23,52 @@ import { ScorePanel } from './ScorePanel'
  * is a list of groups from the start rather than a list of clips.
  */
 type ExperimentGroup = {
-  id: string
-  label: string
-  pieces: readonly PadGroove[]
-}
+  id: string;
+  label: string;
+  pieces: readonly PadGroove[];
+};
 
 const GROUPS: readonly ExperimentGroup[] = [
-  { id: 'video', label: 'Transcribed from video', pieces: [PAD_GROOVE] },
-]
+  { id: "video", label: "Transcribed from video", pieces: [PAD_GROOVE] },
+];
 
-const BY_ID = new Map(GROUPS.flatMap((group) => group.pieces.map((piece) => [piece.id, piece])))
+const BY_ID = new Map(
+  GROUPS.flatMap((group) => group.pieces.map((piece) => [piece.id, piece])),
+);
 
 export function ExperimentsPage() {
-  const [id, setId] = useState(PAD_GROOVE.id)
-  const piece = BY_ID.get(id)!
+  const [id, setId] = useState(PAD_GROOVE.id);
+  const piece = BY_ID.get(id)!;
 
-  const columnRef = useRef<HTMLDivElement>(null)
-  const width = useElementWidth(columnRef, MIN_SCORE_WIDTH)
+  const columnRef = useRef<HTMLDivElement>(null);
+  const width = useElementWidth(columnRef, MIN_SCORE_WIDTH);
 
   const {
-    isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
-    input, micStatus, micError, sensitivity, getMeter,
-    activeStroke, report,
-    toggle, calibrate, setTempo, setMetronome, clearLatency,
-    useKeyboard, useMicrophone, setSensitivity,
-  } = usePractice(piece.phrase)
+    isPlaying,
+    bpm,
+    metronome,
+    mode,
+    latencyMs,
+    calibrationTaps,
+    input,
+    micStatus,
+    micError,
+    sensitivity,
+    getMeter,
+    activeStroke,
+    report,
+    toggle,
+    calibrate,
+    setTempo,
+    setMetronome,
+    clearLatency,
+    useKeyboard,
+    useMicrophone,
+    setSensitivity,
+  } = usePractice(piece.phrase);
 
-  const calibrating = mode === 'calibrating'
-  useSpacebarToggle(toggle, !calibrating)
+  const calibrating = mode === "calibrating";
+  useSpacebarToggle(toggle, !calibrating);
 
   return (
     <>
@@ -53,9 +76,9 @@ export function ExperimentsPage() {
         <div className="panel-stack">
           <p className="eyebrow">Experiments</p>
           <p className="note">
-            Transcriptions still being worked out, and the reading that produced them. Each one
-            says how much of it was actually seen and how much is convention, because on a
-            recording those are not the same thing.
+            Transcriptions still being worked out, and the reading that produced
+            them. Each one says how much of it was actually seen and how much is
+            convention, because on a recording those are not the same thing.
           </p>
 
           {GROUPS.map((group) => (
@@ -63,7 +86,10 @@ export function ExperimentsPage() {
               <p className="eyebrow">{group.label}</p>
               <ul className="catalogue">
                 {group.pieces.map((item) => (
-                  <li key={item.id} className={item.id === id ? 'is-selected' : ''}>
+                  <li
+                    key={item.id}
+                    className={item.id === id ? "is-selected" : ""}
+                  >
                     <button type="button" onClick={() => setId(item.id)}>
                       {item.name}
                     </button>
@@ -81,16 +107,20 @@ export function ExperimentsPage() {
         <div className="worksheet" ref={columnRef}>
           <header className="sheet-header">
             <p className="eyebrow">
-              {piece.at.author} · {meterText(piece.phrase.meter!)} at {piece.bpm} bpm
+              {piece.at.author} · {meterText(piece.phrase.meter!)} at{" "}
+              {piece.bpm} bpm
             </p>
             <h2>{piece.name}</h2>
             <p className="note">{piece.note}</p>
             {/* Provenance, for the same reason a book exercise carries its page
                 and staff line: a transcription you cannot check is a claim. */}
             <p className="note">
-              Read from “{piece.at.title}”, {piece.at.from.toFixed(1)}–{piece.at.to.toFixed(1)}s.
-              The clip is not committed; the grid it was measured against is, in{' '}
-              <code>packages/videos/sources/{piece.at.file.split('/')[0]}/grid.json</code>.
+              Read from “{piece.at.title}”, {piece.at.from.toFixed(1)}–
+              {piece.at.to.toFixed(1)}s. The grid it was measured against is, in{" "}
+              <code>
+                packages/videos/sources/{piece.at.file.split("/")[0]}/grid.json
+              </code>
+              .
             </p>
           </header>
 
@@ -107,9 +137,11 @@ export function ExperimentsPage() {
             {GROOVE_SECTIONS.map((section) => (
               <li key={section.id}>
                 <p className="eyebrow">
-                  {section.label} · bars {section.bars[0]}–{section.bars[1]} ·{' '}
-                  {playedTimes(section)}× ·{' '}
-                  {section.reading === 'frames' ? 'read off the frames' : 'rhythm read, sticking conventional'}
+                  {section.label} · bars {section.bars[0]}–{section.bars[1]} ·{" "}
+                  {playedTimes(section)}× ·{" "}
+                  {section.reading === "frames"
+                    ? "read off the frames"
+                    : "rhythm read, sticking conventional"}
                 </p>
                 <p className="note">{section.note}</p>
               </li>
@@ -118,8 +150,13 @@ export function ExperimentsPage() {
         </div>
 
         <div className="sheet-transport">
-          <button type="button" className="play" onClick={toggle} disabled={calibrating}>
-            {isPlaying ? 'Stop' : 'Play'}
+          <button
+            type="button"
+            className="play"
+            onClick={toggle}
+            disabled={calibrating}
+          >
+            {isPlaying ? "Stop" : "Play"}
           </button>
           <label className="tempo">
             <strong>{bpm}</strong> bpm
@@ -132,7 +169,10 @@ export function ExperimentsPage() {
             />
           </label>
           <p className="step-caption">
-            <strong>{toNumber(piece.phrase.beats) / toNumber(barBeats(piece.phrase.meter!))}</strong>{' '}
+            <strong>
+              {toNumber(piece.phrase.beats) /
+                toNumber(barBeats(piece.phrase.meter!))}
+            </strong>{" "}
             bars · {GROOVE_SECTIONS.length} sections
           </p>
           <p className="shortcut-hint">
@@ -162,16 +202,17 @@ export function ExperimentsPage() {
           />
           <section className="panel-stack">
             <p className="eyebrow">Your timing</p>
-            {input === 'microphone' ? (
+            {input === "microphone" ? (
               <p className="hint">
-                A microphone hears one drum, so on a two-line piece it cannot tell which hand
-                struck. Timing is still scored; switch to the keyboard to have the hands checked.
+                A microphone hears one drum, so on a two-line piece it cannot
+                tell which hand struck. Timing is still scored; switch to the
+                keyboard to have the hands checked.
               </p>
             ) : null}
-            <ScorePanel report={report} showSticking={input === 'keyboard'} />
+            <ScorePanel report={report} showSticking={input === "keyboard"} />
           </section>
         </div>
       </aside>
     </>
-  )
+  );
 }

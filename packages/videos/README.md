@@ -93,10 +93,10 @@ fabricates the evidence you are trying to read.
 ## When the second clip lands
 
 `src/index.ts` re-exports the one clip wholesale. That does not survive a
-second: both would export `PAD_GROOVES`, and `VideoRef`, `Reading` and
+second: both would export `PAD_GROOVE`, and `VideoRef`, `Reading` and
 `PadGroove` are declared inside the clip module rather than beside it. Lift the
 three types to `src/videoRef.ts` and give each clip's collection its own name
-before adding one — cheaper now than as a rename across the catalogue later.
+before adding one — cheaper now than as a rename across every page that reads them later.
 
 See [`docs/transcribing-video.md`](../../docs/transcribing-video.md) for the
 method in full, and the four automated approaches that failed.

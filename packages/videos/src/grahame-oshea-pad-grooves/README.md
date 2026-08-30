@@ -91,7 +91,7 @@ voices on a stave align by tick position.
 ## Before a second clip lands
 
 `src/index.ts` re-exports this module wholesale, so a second clip would collide
-on `PAD_GROOVES`, and `VideoRef`, `Reading` and `PadGroove` are declared here
+on `PAD_GROOVE`, and `VideoRef`, `Reading` and `PadGroove` are declared here
 rather than beside the clips that share them. Lift the three types to
 `src/videoRef.ts` and give each clip's collection its own name first — cheap
-now, a rename across the catalogue and its tests later.
+now, a rename across the pages that read them, and their tests, later.
