@@ -119,20 +119,47 @@ outstanding should someone want to check them against a rudiment book.
 ## Stick Control
 
 Exercises transcribed from photographs of George Lawrence Stone's *Stick
-Control*, kept a book-page at a time with the printed numbering carried through
-so any one of them can be checked against the source. The page images live in
-`assets/` and are gitignored: the patterns are transcribed for personal
-practice, the scans are not redistributed.
+Control* — 459 of them over the 21 pages that were photographed, kept a
+book-page at a time with the printed numbering carried through so any one can
+be checked against the source. The page images live in `assets/` and are
+gitignored: the patterns are transcribed for personal practice, the scans are
+not redistributed.
 
-Most of these exercises are a short pattern followed by a tail that simply
-carries on alternating, so the tail is generated from the rule the page follows
-rather than copy-typed — several thousand letters with no way to check them.
-The rule was verified against the printed page for every exercise, and the
-pages that break it are written out literally instead.
+| Pages | Section |
+| ----- | ------- |
+| 9–13 | Triplets, and the short roll combinations |
+| 14–15 | Short Rolls and Triplets |
+| 16–19 | Flam Beats |
+| 24–26 | Short Rolls in 6/8 |
+| 30–33 | Combinations in 3/8 and 2/4 |
+| 34–35 | Flam Triplets and Dotted Notes |
+| 42 | Short Roll Progressions |
+
+Most exercises are a short pattern followed by a tail that carries on by a
+rule, so the tail is generated rather than copy-typed — several thousand
+letters with no way to check them. Whole sections turn out to be generated at a
+larger scale too: from no. 19, Flam Beats is nothing but every ordered pair of
+its fourteen right-hand-led bars, and then the same again mirrored, which is
+what makes 96 exercises out of eighteen. Pages 34 and 35 do the same with
+eight.
+
+The rule was verified against the printed page for every exercise, and where a
+page breaks it the sticking is written out literally instead. The pages do not
+always agree with each other, either: what a rest at the end of a bar does to
+the hand the next bar leads with is one thing pages 24 and 33 answer
+differently, so that is a property of the block rather than a rule of the book.
 
 The check that matters on a transcription is arithmetic: every exercise must
 fill a whole number of bars of its own metre, which a mistaken duration
-template cannot do.
+template cannot do. Spot checks then pin the lines where a rule could plausibly
+have been guessed wrong.
+
+Two of these pages need note lengths that notation has no glyph for — eight
+sixteenths in the space of six on pages 25 and 26, five eighths in the space of
+four on page 42. They are plain fractions in the domain, and `notation/` knows
+to draw them as an ordinary note with a number over the group. A test asserts
+that VexFlow makes a bar of them exactly as long as the domain says it is,
+because the two do that arithmetic independently and can disagree in silence.
 
 Every exercise also records the image and the staff line it was read from, and
 the app prints that reference under whichever one is selected. `my.show-source.py`
@@ -142,7 +169,15 @@ on trust:
 
 ```
 page-12.HEIC · right column, line 1   ->   ./my.show-source.py 12 right 1
+page-34.HEIC · full width, line 8     ->   ./my.show-source.py 34 left 8 --single
 ```
 
+A page is usually twelve staff lines in two columns, but not always. Some rule
+a line across the middle, which takes a line's worth of space without holding a
+staff; page 34 gives its last six lines the full width of the page, because
+they are four bars long. Both are recorded — as a blank row and as a column
+span — so the crop lands on the right staff and the accounting still adds up.
+
 Tests hold the mapping honest: no two exercises may claim the same staff line,
-and between them they must account for every line printed on the page.
+nothing may sit on a line the page leaves blank, and between them they must
+account for every line slot down the page.
