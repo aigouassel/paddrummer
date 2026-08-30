@@ -30,7 +30,7 @@ src/
   ui/         React components, one file per page plus the shared panels.
 ```
 
-Three pages, routed on the URL hash: **Practice** (one rudiment, your tempo),
+Three pages, routed on the URL hash: **Practice** (any one piece, your tempo),
 **Exercises** (guided routines that set the rudiment and tempo and advance
 themselves) and **Stick Control** (exercises transcribed from a practice book,
 read a page at a time). All three use the same three-column layout and share a
@@ -225,6 +225,11 @@ meaning "shoulder", and tests hold both halves of that line.
 Only the opening groove is transcribed. The faster sections' rhythm is known
 but their sticking is not readable at 30 fps, and a stroke nobody can see is
 not written down.
+
+It plays on the **Practice** page, which now offers any piece rather than only
+a rudiment — `domain/catalogue.ts` groups the 40 rudiments, the 18 studies and
+the grooves into one picker. That also closed a gap: the studies existed but
+could only be met inside a routine, at the routine's tempo.
 
 [`docs/transcribing-video.md`](docs/transcribing-video.md) records the method,
 the four automated approaches that failed and why, and what is still open.

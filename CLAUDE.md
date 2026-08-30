@@ -38,7 +38,12 @@ src/
 
 Three pages routed on the URL hash: **Practice**, **Exercises**, **Stick
 Control**. They share one audio engine, so calibration and input choice survive
-navigation.
+navigation. They divide by *interaction model*, not by subject — Practice is one
+piece at your tempo, Exercises a routine that drives itself, Stick Control
+browsing a source — which is the axis to keep when adding material.
+`domain/catalogue.ts` is Practice's side of that: everything playable on its
+own, grouped, each entry carrying what a picker needs so the component does not
+branch on kind.
 
 Four load-bearing decisions, each of which is easy to break by accident:
 
