@@ -12,3 +12,5 @@ dist/
 # The transcribed patterns live in src/domain/stickControl.ts; the page images
 # themselves stay out of version control.
 assets/
+
+!CLAUDE.md

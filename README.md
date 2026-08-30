@@ -181,3 +181,8 @@ span — so the crop lands on the right staff and the accounting still adds up.
 Tests hold the mapping honest: no two exercises may claim the same staff line,
 nothing may sit on a line the page leaves blank, and between them they must
 account for every line slot down the page.
+
+[`docs/transcribing-stick-control.md`](docs/transcribing-stick-control.md)
+records how the reading was actually done — how to get a photograph on screen,
+how to tell a rule from an exception, and what each of them costs when it is
+wrong.
