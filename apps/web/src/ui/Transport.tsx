@@ -1,19 +1,22 @@
-const MIN_BPM = 30
-const MAX_BPM = 240
+import { TempoControl } from './TempoControl'
 
 /** Centre column, under the stave: what drives the notes above it. */
 export function Transport({
   isPlaying,
   disabled,
   bpm,
+  defaultBpm,
   onToggle,
   onTempo,
+  onResetTempo,
 }: {
   isPlaying: boolean
   disabled: boolean
   bpm: number
+  defaultBpm?: number
   onToggle: () => void
   onTempo: (bpm: number) => void
+  onResetTempo: () => void
 }) {
   return (
     <div className="transport-block">
@@ -22,19 +25,12 @@ export function Transport({
           {isPlaying && !disabled ? 'Stop' : 'Play'}
         </button>
 
-        <label className="tempo">
-          <span className="tempo-value">
-            <strong>{bpm}</strong> bpm
-          </span>
-          <input
-            type="range"
-            min={MIN_BPM}
-            max={MAX_BPM}
-            value={bpm}
-            onChange={(event) => onTempo(Number(event.target.value))}
-            aria-label="Tempo"
-          />
-        </label>
+        <TempoControl
+          bpm={bpm}
+          defaultBpm={defaultBpm}
+          onTempo={onTempo}
+          onReset={onResetTempo}
+        />
       </div>
 
       <p className="shortcut-hint">

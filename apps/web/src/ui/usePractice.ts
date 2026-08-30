@@ -19,7 +19,7 @@ const REPORT_MS = 100
  * because notes are scheduled up to 120ms *before* they sound. The engine
  * knows what will play; only the audio clock knows what is playing now.
  */
-export function usePractice(phrase: Phrase) {
+export function usePractice(phrase: Phrase, defaultBpm?: number) {
   const engine = useEngine()
 
   const state = useSyncExternalStore(engine.subscribe, engine.getState)
@@ -35,6 +35,18 @@ export function usePractice(phrase: Phrase) {
     setActiveStroke(-1)
     setReport(null)
   }, [engine, phrase])
+
+  // A piece that knows its own tempo sets it on arrival, and again whenever
+  // you come back to it — so the reset below is just "select me again".
+  //
+  // A piece that names no tempo leaves the tempo alone rather than snapping to
+  // some app-wide number nobody chose. The engine is shared across pages on
+  // purpose, and where you had the tempo is part of what survives navigating.
+  // The alternative — every unlabelled piece resetting to 100 — is easy to
+  // swap in here if it turns out to read better in use.
+  useEffect(() => {
+    if (defaultBpm !== undefined) engine.setTempo(defaultBpm)
+  }, [engine, phrase, defaultBpm])
 
   // Leaving a page stops its audio. The engine outlives the page, so without
   // this the metronome carries on from a page that has no Stop button on it.
@@ -75,7 +87,12 @@ export function usePractice(phrase: Phrase) {
     report,
     toggle,
     calibrate,
+    /** The tempo the piece asks for, or undefined where it asks for none. */
+    defaultBpm,
     setTempo: useCallback((bpm: number) => engine.setTempo(bpm), [engine]),
+    resetTempo: useCallback(() => {
+      if (defaultBpm !== undefined) engine.setTempo(defaultBpm)
+    }, [engine, defaultBpm]),
     setMetronome: useCallback((on: boolean) => engine.setMetronome(on), [engine]),
     clearLatency: useCallback(() => engine.setLatency(0), [engine]),
     useKeyboard: useCallback(() => engine.useKeyboard(), [engine]),

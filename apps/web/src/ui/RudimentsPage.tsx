@@ -40,9 +40,9 @@ export function RudimentsPage() {
     isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
     input, micStatus, micError, sensitivity, getMeter,
     activeStroke, report,
-    toggle, calibrate, setTempo, setMetronome, clearLatency,
+    toggle, calibrate, setTempo, defaultBpm, resetTempo, setMetronome, clearLatency,
     useKeyboard, useMicrophone, setSensitivity,
-  } = usePractice(piece.phrase)
+  } = usePractice(piece.phrase, piece.bpm)
 
   const calibrating = mode === 'calibrating'
   const stageRef = useRef<HTMLDivElement>(null)
@@ -104,8 +104,10 @@ export function RudimentsPage() {
             isPlaying={isPlaying}
             disabled={calibrating}
             bpm={bpm}
+            defaultBpm={defaultBpm}
             onToggle={toggle}
             onTempo={setTempo}
+            onResetTempo={resetTempo}
           />
         </div>
 

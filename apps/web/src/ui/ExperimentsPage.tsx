@@ -10,7 +10,8 @@ import { toNumber } from "@paddrummer/core/fraction";
 import { usePractice } from "./usePractice";
 import { useSpacebarToggle } from "./useSpacebarToggle";
 import { useElementWidth } from "./useElementWidth";
-import { Score, MIN_SCORE_WIDTH } from "./Score";
+import { Score, MIN_SCORE_WIDTH } from "./Score"
+import { TempoControl } from "./TempoControl";
 import { InputPanel } from "./InputPanel";
 import { ScorePanel } from "./ScorePanel";
 
@@ -60,12 +61,14 @@ export function ExperimentsPage() {
     toggle,
     calibrate,
     setTempo,
+    defaultBpm,
+    resetTempo,
     setMetronome,
     clearLatency,
     useKeyboard,
     useMicrophone,
     setSensitivity,
-  } = usePractice(piece.phrase);
+  } = usePractice(piece.phrase, piece.bpm);
 
   const calibrating = mode === "calibrating";
   useSpacebarToggle(toggle, !calibrating);
@@ -158,16 +161,12 @@ export function ExperimentsPage() {
           >
             {isPlaying ? "Stop" : "Play"}
           </button>
-          <label className="tempo">
-            <strong>{bpm}</strong> bpm
-            <input
-              type="range"
-              min={40}
-              max={200}
-              value={bpm}
-              onChange={(event) => setTempo(Number(event.target.value))}
-            />
-          </label>
+          <TempoControl
+            bpm={bpm}
+            defaultBpm={defaultBpm}
+            onTempo={setTempo}
+            onReset={resetTempo}
+          />
           <p className="step-caption">
             <strong>
               {toNumber(piece.phrase.beats) /

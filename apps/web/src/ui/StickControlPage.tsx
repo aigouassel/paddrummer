@@ -6,6 +6,7 @@ import { useSpacebarToggle } from './useSpacebarToggle'
 import { useElementWidth } from './useElementWidth'
 import { useFollowActive } from './useFollowActive'
 import { Score, MIN_SCORE_WIDTH } from './Score'
+import { TempoControl } from './TempoControl'
 import { InputPanel } from './InputPanel'
 import { ScorePanel } from './ScorePanel'
 
@@ -37,7 +38,7 @@ export function StickControlPage() {
     isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
     input, micStatus, micError, sensitivity, getMeter,
     activeStroke, report,
-    toggle, calibrate, setTempo, setMetronome, clearLatency,
+    toggle, calibrate, setTempo, defaultBpm, resetTempo, setMetronome, clearLatency,
     useKeyboard, useMicrophone, setSensitivity,
   } = usePractice(phrase)
 
@@ -144,16 +145,12 @@ export function StickControlPage() {
           <button type="button" className="play" onClick={toggle} disabled={calibrating}>
             {isPlaying ? 'Stop' : 'Play'}
           </button>
-          <label className="tempo">
-            <strong>{bpm}</strong> bpm
-            <input
-              type="range"
-              min={40}
-              max={200}
-              value={bpm}
-              onChange={(event) => setTempo(Number(event.target.value))}
-            />
-          </label>
+          <TempoControl
+            bpm={bpm}
+            defaultBpm={defaultBpm}
+            onTempo={setTempo}
+            onReset={resetTempo}
+          />
           <p className="step-caption">
             Page {bookPage.page}, no. <strong>{exercise.n}</strong>
           </p>

@@ -200,6 +200,26 @@ select {
 .play:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .tempo { display: grid; gap: 0.3rem; width: min(22rem, 100%); }
+
+/* Only present once the tempo has been moved off the one the piece names, so
+   it reads as an undo rather than as another control to weigh up. It carries
+   the number it returns to, because "reset" alone makes you play to find out. */
+.tempo-reset {
+  flex: none;
+  align-self: center;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tempo-reset:hover { color: var(--fg); border-color: var(--accent); }
 .tempo-value { color: var(--muted); font-size: 0.85rem; text-align: center; }
 .tempo-value strong { color: var(--fg); font-variant-numeric: tabular-nums; }
 
