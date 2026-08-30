@@ -89,6 +89,16 @@ const HEIGHT_TWO_LINES = 178
  * accident to rely on, so the gap is now asked for rather than hoped for.
  */
 const BAR_TAIL = 14
+/**
+ * Extra room above every stave once the phrase carries section labels.
+ *
+ * Only the row that opens a section prints one, but the allowance is made on
+ * all of them: rows of differing height would put the staves at uneven
+ * intervals down the page, which is more distracting than the whitespace.
+ */
+const SECTION_HEADROOM = 26
+/** How far above the stave the label sits, clear of accents and grace stems. */
+const SECTION_SHIFT = -14
 
 /**
  * Past this the stave stops looking like music and starts looking like a logo.
@@ -262,7 +272,8 @@ export function renderScore(
   if (phrase.lines.length === 0 || placed.length === 0) return { noteElements: [] }
 
   const twoLines = phrase.lines.length > 1
-  const systemHeight = twoLines ? HEIGHT_TWO_LINES : HEIGHT
+  const headroom = phrase.sections?.length ? SECTION_HEADROOM : 0
+  const systemHeight = (twoLines ? HEIGHT_TWO_LINES : HEIGHT) + headroom
 
   // Scaling the whole context rather than laying out at the full pixel width
   // keeps every proportion VexFlow was designed around — note spacing, beam
@@ -292,7 +303,7 @@ export function renderScore(
     const demand = bars.reduce((total, bar) => total + bar.width, 0) || 1
 
     let x = PADDING
-    const y = STAVE_TOP + systemIndex * systemHeight
+    const y = STAVE_TOP + headroom + systemIndex * systemHeight
 
     bars.forEach((bar, barIndex) => {
       const head = barIndex === 0
@@ -306,6 +317,9 @@ export function renderScore(
       })
       if (head) stave.addClef('percussion')
       if (head && firstSystem && phrase.meter) stave.addTimeSignature(meterText(phrase.meter))
+      // No box around it: these are the words a player said over the music, not
+      // rehearsal letters an ensemble is counting from.
+      if (bar.label) stave.setSection(bar.label, SECTION_SHIFT, 0, undefined, false)
       stave.setContext(context).draw()
 
       const built = phrase.lines.map((phraseLine, lineIndex) => {

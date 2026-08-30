@@ -1,4 +1,4 @@
-import { ZERO, add, compare, equals, type Fraction } from '@paddrummer/core/fraction'
+import { ZERO, add, compare, equals, toNumber, type Fraction } from '@paddrummer/core/fraction'
 import { toBeats } from '@paddrummer/core/duration'
 import { type Phrase, barBeats, isRest } from '@paddrummer/core/phrase'
 
@@ -37,6 +37,8 @@ export type Bar = {
   slices: readonly BarSlice[]
   /** Width this bar wants for its notes alone, before any stretching. */
   width: number
+  /** Set when a section begins here; printed above the bar. */
+  label?: string
 }
 
 export type ScorePlan = {
@@ -129,18 +131,35 @@ export function planScore(phrase: Phrase, width: number, maxZoom: number): Score
   const barCount = Math.max(...perLine.map((slices) => slices.length), 0)
   if (barCount === 0) return { systems: [], zoom: 1, logicalWidth: width }
 
+  // Sections are given in beats; every bar is a full bar of the same metre, so
+  // the bar a section opens is simply how many bars fit before it.
+  const barLength = toNumber(barBeats(phrase.meter ?? [4, 4]))
+  const labels = new Map<number, string>()
+  for (const section of phrase.sections ?? []) {
+    const index = toNumber(section.at) / barLength
+    if (!Number.isInteger(Math.round(index * 1e6) / 1e6)) {
+      throw new Error(`planScore: section "${section.label}" does not start on a barline`)
+    }
+    labels.set(Math.round(index), section.label)
+  }
+
   const bars: Bar[] = Array.from({ length: barCount }, (_, index) => {
     // A line that ran out of bars contributes an empty slice rather than
     // dropping out, so `slices[lineIndex]` stays a valid coordinate throughout.
     const slices = perLine.map((lineSlices) => lineSlices[index] ?? { start: 0, end: 0 })
-    return { slices, width: measure(phrase, slices) }
+    const label = labels.get(index)
+    return { slices, width: measure(phrase, slices), ...(label ? { label } : {}) }
   })
 
   const meterWidth = phrase.meter ? WIDTH_PER_METER : 0
   const overhead = PADDING * 2 + FIXED_WIDTH + meterWidth
   const wholeWidth = overhead + bars.reduce((total, bar) => total + bar.width, 0)
 
-  if (wholeWidth <= width) {
+  // A section that opens partway along the row has to wrap even when the music
+  // would have fitted, because the row it opens is the point of labelling it.
+  const breaks = bars.some((bar, index) => index > 0 && bar.label !== undefined)
+
+  if (wholeWidth <= width && !breaks) {
     const zoom = Math.min(maxZoom, Math.max(1, width / wholeWidth))
     return { systems: [bars], zoom, logicalWidth: Math.max(wholeWidth, width / zoom) }
   }
@@ -153,7 +172,10 @@ export function planScore(phrase: Phrase, width: number, maxZoom: number): Score
     // The time signature is printed once, so only the first row pays for it;
     // every row pays for its own clef.
     const budget = width - PADDING * 2 - FIXED_WIDTH - (systems.length === 0 ? meterWidth : 0)
-    if (row.length > 0 && used + bar.width > budget) {
+    // A section starts its own row. The label names what the music does from
+    // here on, and a label sitting over the third bar of a row reads as
+    // belonging to the whole row.
+    if (row.length > 0 && (bar.label !== undefined || used + bar.width > budget)) {
       systems.push(row)
       row = []
       used = 0

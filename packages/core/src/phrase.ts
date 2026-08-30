@@ -45,6 +45,20 @@ export type PhraseLine = {
   events: readonly LineEvent[]
 }
 
+/**
+ * A named place in a phrase, printed above the bar it falls on.
+ *
+ * Only a phrase long enough to lose your place in needs these — a transcribed
+ * clip where the player says “or…. 16ths” and the music changes under it. They
+ * are rehearsal marks, so they carry no musical meaning: playback, scoring and
+ * the model itself ignore them entirely, and only notation reads them.
+ */
+export type PhraseSection = {
+  /** Beats from the start of the phrase. Must fall on a barline. */
+  at: Fraction
+  label: string
+}
+
 export type Phrase = {
   /** null for a rudiment, which is a repeating cell rather than a bar of music. */
   meter: Meter | null
@@ -52,6 +66,8 @@ export type Phrase = {
   lines: readonly PhraseLine[]
   /** Length of one cycle, in quarter-note beats. */
   beats: Fraction
+  /** Empty or absent on anything short enough to read at a glance. */
+  sections?: readonly PhraseSection[]
 }
 
 /** A stroke with its position resolved, which is what playback and scoring want. */
@@ -206,6 +222,85 @@ export function phraseOfLines(meter: Meter, lines: readonly PhraseLine[]): Phras
   }
 
   return { meter, lines, beats }
+}
+
+/** One stretch of a longer phrase: what is played, what it is called, how often. */
+export type PhrasePart = {
+  phrase: Phrase
+  /** Printed above the bar this part begins on. */
+  label?: string
+  /** Times through. The bars are written out, not marked as a repeat. */
+  repeat?: number
+}
+
+/**
+ * Joins stretches of music end to end into one piece.
+ *
+ * A transcription of a clip is not five exercises, it is one performance that
+ * changes character five times, and reading it that way means reading it as a
+ * chart: one phrase, played once, from the top. That is what this builds.
+ *
+ * Every part must agree on the metre and on its lines — same count, same hands
+ * in the same order — because concatenating line 0 of one part with line 0 of
+ * the next is only meaningful if they are the same voice throughout. And every
+ * part must be a whole number of bars, or the part after it would begin in the
+ * middle of one and its label would name a bar that does not exist.
+ *
+ * Repeats are written out rather than marked. A repeat sign says “play this
+ * again”; these bars are a record of bars that were actually played, and the
+ * count comes from the measured grid, so writing them out is the honest form.
+ */
+export function phraseOfParts(parts: readonly PhrasePart[]): Phrase {
+  if (parts.length === 0) throw new Error('phraseOfParts: needs at least one part')
+
+  const first = parts[0]!.phrase
+  const { meter } = first
+  if (!meter) throw new Error('phraseOfParts: needs a metre, so the parts can start on barlines')
+  const bar = barBeats(meter)
+
+  const hands = first.lines.map((part) => part.hand)
+  const events: LineEvent[][] = hands.map(() => [])
+  const sections: PhraseSection[] = []
+  let at: Fraction = ZERO
+
+  parts.forEach(({ phrase, label, repeat = 1 }, index) => {
+    if (!phrase.meter || meterText(phrase.meter) !== meterText(meter)) {
+      throw new Error(
+        `phraseOfParts: part ${index} is in ` +
+          `${phrase.meter ? meterText(phrase.meter) : 'no metre'}, not ${meterText(meter)}`,
+      )
+    }
+    if (phrase.lines.length !== hands.length ||
+        phrase.lines.some((part, i) => part.hand !== hands[i])) {
+      throw new Error(
+        `phraseOfParts: part ${index} has lines ` +
+          `${phrase.lines.map((part) => part.hand).join('/')}, not ${hands.join('/')}`,
+      )
+    }
+    const bars = toNumber(phrase.beats) / toNumber(bar)
+    if (!Number.isInteger(Math.round(bars * 1e6) / 1e6)) {
+      throw new Error(
+        `phraseOfParts: part ${index} is ${toNumber(phrase.beats)} beats, ` +
+          `not a whole number of ${meterText(meter)} bars`,
+      )
+    }
+    if (repeat < 1 || !Number.isInteger(repeat)) {
+      throw new Error(`phraseOfParts: part ${index} cannot be played ${repeat} times`)
+    }
+
+    if (label !== undefined) sections.push({ at, label })
+    for (let pass = 0; pass < repeat; pass += 1) {
+      phrase.lines.forEach((part, i) => events[i]!.push(...part.events))
+      at = add(at, phrase.beats)
+    }
+  })
+
+  return {
+    meter,
+    lines: hands.map((hand, i) => ({ hand, events: events[i]! })),
+    beats: at,
+    ...(sections.length > 0 ? { sections } : {}),
+  }
 }
 
 /**

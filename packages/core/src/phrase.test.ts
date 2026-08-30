@@ -9,6 +9,8 @@ import {
   meterText,
   phraseNoteCount,
   phraseOfLines,
+  phraseOfParts,
+  phraseOfSticking,
   phraseOfStrokes,
   placedStrokes,
 } from './phrase'
@@ -179,5 +181,78 @@ describe('phraseNoteCount', () => {
   it('ignores rests', () => {
     const phrase = phraseOfLines([2, 4], [line('R', 'x - x -', '8')])
     expect(phraseNoteCount(phrase)).toBe(2)
+  })
+})
+
+describe('phraseOfParts', () => {
+  const FOUR_FOUR = [4, 4] as const
+  const bar = (spec: string) => phraseOfLines(FOUR_FOUR, [line('R', spec, 'q')])
+  const two = (r: string, l: string) =>
+    phraseOfLines(FOUR_FOUR, [line('R', r, 'q'), line('L', l, 'q')])
+
+  it('joins parts end to end', () => {
+    const joined = phraseOfParts([{ phrase: bar('x x x x') }, { phrase: bar('x - x -') }])
+    expect(joined.lines[0]!.events).toHaveLength(8)
+    expect(joined.beats).toEqual([8, 1])
+  })
+
+  it('writes a repeat out rather than marking it', () => {
+    const joined = phraseOfParts([{ phrase: bar('x x x x'), repeat: 4 }])
+    expect(joined.lines[0]!.events).toHaveLength(16)
+    expect(joined.beats).toEqual([16, 1])
+  })
+
+  it('puts a label on the beat its part starts, once however many repeats', () => {
+    const joined = phraseOfParts([
+      { phrase: bar('x x x x'), label: 'quarters', repeat: 2 },
+      { phrase: bar('x - x -'), label: 'and again' },
+    ])
+    expect(joined.sections).toEqual([
+      { at: [0, 1], label: 'quarters' },
+      { at: [8, 1], label: 'and again' },
+    ])
+  })
+
+  it('leaves sections off a phrase that named none', () => {
+    expect(phraseOfParts([{ phrase: bar('x x x x') }]).sections).toBeUndefined()
+  })
+
+  it('keeps both hands aligned across the join', () => {
+    const joined = phraseOfParts([
+      { phrase: two('x - x -', '- x - x') },
+      { phrase: two('x x x x', '- - - -') },
+    ])
+    expect(joined.lines.map((l) => l.hand)).toEqual(['R', 'L'])
+    expect(joined.lines[0]!.events).toHaveLength(8)
+    expect(joined.lines[1]!.events).toHaveLength(8)
+    // The second part's right hand starts on beat 4, where the first part ended.
+    expect(beatsOf(joined)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+  })
+
+  it('refuses parts in different metres', () => {
+    const threeFour = phraseOfLines([3, 4], [line('R', 'x x x', 'q')])
+    expect(() => phraseOfParts([{ phrase: bar('x x x x') }, { phrase: threeFour }])).toThrow(
+      /is in 3\/4, not 4\/4/,
+    )
+  })
+
+  it('refuses parts whose lines are not the same voices', () => {
+    expect(() =>
+      phraseOfParts([{ phrase: two('x x x x', '- - - -') }, { phrase: bar('x x x x') }]),
+    ).toThrow(/has lines R, not R\/L/)
+  })
+
+  it('refuses a part that is not a whole number of bars', () => {
+    // Built by hand: `phraseOfLines` would have rejected it first.
+    const stub = phraseOfSticking('R R R', 'q', FOUR_FOUR)
+    expect(() => phraseOfParts([{ phrase: bar('x x x x') }, { phrase: stub }])).toThrow(
+      /not a whole number of 4\/4 bars/,
+    )
+  })
+
+  it('refuses a metreless part, because it has no barlines to start on', () => {
+    expect(() => phraseOfParts([{ phrase: phraseOfStrokes(sticking('R L R L', '16')) }])).toThrow(
+      /needs a metre/,
+    )
   })
 })

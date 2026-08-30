@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { line, phraseOfLines, phraseOfSticking, type Phrase } from '@paddrummer/core/phrase'
+import {
+  line,
+  phraseOfLines,
+  phraseOfParts,
+  phraseOfSticking,
+  type Phrase,
+} from '@paddrummer/core/phrase'
 import { BOOK_PAGES_BY_NUMBER } from '@paddrummer/stick-control'
 import { FIXED_WIDTH, PADDING, planScore, splitBars } from './systems'
 
@@ -144,5 +150,38 @@ describe('planScore', () => {
     )
     const sparse = planScore(quarters(1), WIDE, 1.5)
     expect(dense.systems[0]![0]!.width).toBeGreaterThan(sparse.systems[0]![0]!.width)
+  })
+})
+
+describe('planScore with sections', () => {
+  const WIDE = 900
+  const bar = (spec: string) => phraseOfLines(FOUR_FOUR, [line('R', spec, 'q')])
+
+  const chart = () =>
+    phraseOfParts([
+      { phrase: bar('x x x x'), label: 'quarters', repeat: 2 },
+      { phrase: bar('x - x -'), label: 'sparser', repeat: 2 },
+    ])
+
+  it('starts a section on a row of its own', () => {
+    const plan = planScore(chart(), WIDE, 1.5)
+    // Four bars would sit happily on one row; the labels are what splits them.
+    expect(plan.systems).toHaveLength(2)
+    expect(plan.systems.map((row) => row.length)).toEqual([2, 2])
+  })
+
+  it('labels the bar the section opens, and no other', () => {
+    const plan = planScore(chart(), WIDE, 1.5)
+    expect(plan.systems.flat().map((b) => b.label)).toEqual([
+      'quarters',
+      undefined,
+      'sparser',
+      undefined,
+    ])
+  })
+
+  it('refuses a section that does not fall on a barline', () => {
+    const phrase: Phrase = { ...quarters(2), sections: [{ at: [3, 1], label: 'nowhere' }] }
+    expect(() => planScore(phrase, WIDE, 1.5)).toThrow(/does not start on a barline/)
   })
 })
