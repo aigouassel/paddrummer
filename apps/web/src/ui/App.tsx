@@ -6,7 +6,9 @@ import { ExperimentsPage } from './ExperimentsPage'
 import { SetupDialog } from './SetupDialog'
 import { useColumnWidth } from './useColumnWidth'
 import { MusicWidthProvider, useMusicWidth } from './MusicWidth'
-import { ROUTES, useRoute, type Route } from './useRoute'
+import { HomePage } from './HomePage'
+import { GlossaryPage } from './GlossaryPage'
+import { PAGE_ROUTES, useRoute, type Route } from './useRoute'
 
 /**
  * How wide the right column may be dragged.
@@ -21,10 +23,15 @@ const LEFT_MAX = 224
 const CENTRE_PADDING = 32
 
 const LABELS: Record<Route, string> = {
+  home: 'Home',
   rudiments: 'Rudiments',
   'stick-control': 'Stick Control',
   experiments: 'Experiments',
+  glossary: 'Glossary',
 }
+
+/** Pages that are read rather than played, so they take the whole width. */
+const READING: readonly Route[] = ['home', 'glossary']
 
 /**
  * The shell: a header with the nav, and three columns the current page fills.
@@ -66,6 +73,7 @@ function Shell() {
   // Dragging the panel wider stops where the stave would start to scroll. The
   // page says how much room its music needs; the shell knows what else is
   // competing for it.
+  const reading = READING.includes(route)
   const musicMin = useMusicWidth()
   const right = useColumnWidth({
     ...RIGHT_COLUMN,
@@ -85,7 +93,7 @@ function Shell() {
   return (
     <>
       <div
-        className={`layout ${panel ? '' : 'is-panel-hidden'}`}
+        className={`layout ${panel ? '' : 'is-panel-hidden'} ${reading ? 'is-reading' : ''}`}
         style={
           {
             '--right-column': `${right.width}px`,
@@ -94,9 +102,13 @@ function Shell() {
         }
       >
         <header className="topbar">
-          <h1>paddrummer</h1>
+          {/* The title is the way home, which is where a wordmark usually
+              goes anyway — and keeps the nav about the material. */}
+          <button type="button" className="wordmark" onClick={() => navigate('home')}>
+            paddrummer
+          </button>
           <nav className="nav">
-            {ROUTES.map((id) => (
+            {PAGE_ROUTES.map((id) => (
               <button
                 key={id}
                 type="button"
@@ -113,16 +125,19 @@ function Shell() {
             <button type="button" className="panel-toggle" onClick={() => setSetup(true)}>
               Setup
             </button>
-            {/* Says what it will do rather than what is showing: a toggle
-                labelled with its current state reads as a claim, not a button. */}
-            <button
-              type="button"
-              className="panel-toggle"
-              onClick={() => setPanel((on) => !on)}
-              aria-expanded={panel}
-            >
-              {panel ? 'Hide panel' : 'Show panel'}
-            </button>
+            {/* Acts on a column the reading pages do not have. Says what it
+                will do rather than what is showing: a toggle labelled with its
+                current state reads as a claim, not a button. */}
+            {reading ? null : (
+              <button
+                type="button"
+                className="panel-toggle"
+                onClick={() => setPanel((on) => !on)}
+                aria-expanded={panel}
+              >
+                {panel ? 'Hide panel' : 'Show panel'}
+              </button>
+            )}
           </div>
         </header>
 
@@ -130,14 +145,18 @@ function Shell() {
           <StickControlPage />
         ) : route === 'experiments' ? (
           <ExperimentsPage />
-        ) : (
+        ) : route === 'glossary' ? (
+          <GlossaryPage />
+        ) : route === 'rudiments' ? (
           <RudimentsPage />
+        ) : (
+          <HomePage navigate={navigate} />
         )}
 
         {/* Sits on the boundary rather than inside either column, so neither
             page nor panel has to know it exists. `right` is the column's own
             width, which puts it on the edge at any size. */}
-        {panel ? (
+        {panel && !reading ? (
           <div
             className="col-resizer"
             role="separator"

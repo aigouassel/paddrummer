@@ -468,6 +468,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@paddrummer/glossary@workspace:^, @paddrummer/glossary@workspace:packages/glossary":
+  version: 0.0.0-use.local
+  resolution: "@paddrummer/glossary@workspace:packages/glossary"
+  languageName: unknown
+  linkType: soft
+
 "@paddrummer/notation@workspace:^, @paddrummer/notation@workspace:packages/notation":
   version: 0.0.0-use.local
   resolution: "@paddrummer/notation@workspace:packages/notation"
@@ -511,6 +517,7 @@ __metadata:
   resolution: "@paddrummer/web@workspace:apps/web"
   dependencies:
     "@paddrummer/core": "workspace:^"
+    "@paddrummer/glossary": "workspace:^"
     "@paddrummer/notation": "workspace:^"
     "@paddrummer/rudiments": "workspace:^"
     "@paddrummer/stick-control": "workspace:^"

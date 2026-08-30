@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@paddrummer/core": "workspace:^",
+    "@paddrummer/glossary": "workspace:^",
     "@paddrummer/notation": "workspace:^",
     "@paddrummer/rudiments": "workspace:^",
     "@paddrummer/stick-control": "workspace:^",

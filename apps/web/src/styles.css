@@ -161,6 +161,11 @@ body {
 .layout.is-panel-hidden { grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) 3.5rem; }
 .layout.is-panel-hidden .col-right { display: none; }
 
+/* Home and the glossary are read, not played: no list to pick from, no timing
+   to watch, so the three columns collapse to one and the text takes a measure
+   it can be read at rather than the full window. */
+.layout.is-reading { grid-template-columns: 1fr; grid-template-areas: 'top' 'center'; }
+
 .col-left { grid-area: left; border-right: 1px solid var(--line); }
 .col-right { grid-area: right; border-left: 1px solid var(--line); }
 
@@ -753,3 +758,108 @@ select {
 }
 
 .clip-speed { font-size: 0.75rem; }
+
+
+/* ── Reading pages ──────────────────────────────────────────────── */
+
+/*
+ * `col-center` is a two-row grid built for a stage above a transport, and a
+ * page of prose has more children than that — they land in implicit rows and
+ * the first gets squeezed by the 1fr. Reading pages keep the grid *area* and
+ * drop the grid.
+ */
+.prose {
+  display: block;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.page-head { margin-bottom: 2rem; }
+.page-head h2 { margin: 0.2rem 0 0.6rem; font-size: 1.5rem; letter-spacing: -0.02em; }
+
+.home-title { max-width: 22ch; }
+
+.lede { margin: 0; color: var(--muted); font-size: 1rem; line-height: 1.6; }
+
+/* The wordmark is a button so it can navigate, and must not look like one. */
+.wordmark {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+
+/* A button that reads as a link, for prose that navigates mid-sentence. */
+.link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.home-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.home-card {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-card:hover { border-color: var(--accent); }
+.home-card h3 { margin: 0; font-size: 1.05rem; letter-spacing: -0.01em; }
+.home-card .note { margin: 0; }
+
+.home-section { margin-bottom: 2rem; }
+.home-section h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.home-section .note { margin: 0 0 0.6rem; }
+
+.glossary-group { margin-bottom: 2.25rem; }
+.glossary-group h3 { margin: 0 0 0.9rem; font-size: 1rem; color: var(--accent); }
+
+.glossary { margin: 0; }
+
+/*
+ * The term above its definition rather than beside it. A two-column list looks
+ * tidier and reads worse: the definitions here are sentences, and a narrow
+ * second column breaks them into slivers.
+ */
+.glossary-entry {
+  padding: 0.7rem 0 0.7rem 0.9rem;
+  border-left: 2px solid var(--line);
+}
+
+.glossary-entry + .glossary-entry { margin-top: 0.3rem; }
+.glossary-entry:target { border-left-color: var(--accent); }
+
+.glossary dt { font-weight: 600; }
+
+.glossary dd {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.glossary-see a { color: var(--accent); text-decoration: none; }
+.glossary-see a:hover { text-decoration: underline; }

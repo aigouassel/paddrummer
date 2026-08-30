@@ -1,9 +1,12 @@
 import { useCallback, useSyncExternalStore } from 'react'
 
-export const ROUTES = ['rudiments', 'stick-control', 'experiments'] as const
+export const ROUTES = ['home', 'rudiments', 'stick-control', 'experiments', 'glossary'] as const
+
+/** The ones the nav offers. Home is reached by the title, glossary by name. */
+export const PAGE_ROUTES = ROUTES.filter((route) => route !== 'home')
 export type Route = (typeof ROUTES)[number]
 
-const DEFAULT: Route = 'rudiments'
+const DEFAULT: Route = 'home'
 
 const isRoute = (value: string): value is Route => (ROUTES as readonly string[]).includes(value)
 
