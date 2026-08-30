@@ -1234,7 +1234,11 @@ const page35: BookPage = {
 
 /** One of five eighth notes in the space of four — the page's `5` bracket. */
 const FIVE: Duration = QUINTUPLET_EIGHTH
-/** Six in the space of four, which is an eighth-note triplet twice over. */
+/**
+ * Six in the space of four, which is an eighth-note triplet twice over and so
+ * needs no bracket of its own. The page draws one `6` where this draws two
+ * `3`s; the rhythm is the same and the notes fall in the same places.
+ */
 const SIX: Duration = '8t'
 
 const handsOfSpec = (spec: string): Hand[] =>
@@ -1309,14 +1313,14 @@ const P42: readonly { phrase: Phrase; note?: string }[] = [
   { phrase: rolledClose('L R L L R'), note: 'Closed roll, untied.' },
 
   // 17–24: a roll, then six in the space of four.
-  { phrase: rolledProgression('R', 8, false, 'R L R L R L', SIX), note: '9 stroke open roll. The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('L', 8, false, 'L R L R L R', SIX), note: 'The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('R', 8, false, 'R R L L R R', SIX), note: 'The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('R', 8, false, 'R R R L L L', SIX), note: 'The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('R', 7, true, 'R L R L R L', SIX), note: '7 stroke open roll, ending on a rest. The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('L', 7, true, 'L R L R L R', SIX), note: 'The roll ends on a rest. The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('R', 7, true, 'R R L L R R', SIX), note: 'The roll ends on a rest. The book writes the second bar as a repeat sign.' },
-  { phrase: rolledProgression('R', 7, true, 'R R R L L L', SIX), note: 'The roll ends on a rest. The book writes the second bar as a repeat sign.' },
+  { phrase: rolledProgression('R', 8, false, 'R L R L R L', SIX), note: '9 stroke open roll. The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('L', 8, false, 'L R L R L R', SIX), note: 'The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('R', 8, false, 'R R L L R R', SIX), note: 'The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('R', 8, false, 'R R R L L L', SIX), note: 'The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('R', 7, true, 'R L R L R L', SIX), note: '7 stroke open roll, ending on a rest. The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('L', 7, true, 'L R L R L R', SIX), note: 'The roll ends on a rest. The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('R', 7, true, 'R R L L R R', SIX), note: 'The roll ends on a rest. The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
+  { phrase: rolledProgression('R', 7, true, 'R R R L L L', SIX), note: 'The roll ends on a rest. The book writes the second bar as a repeat sign, and brackets the six as one group where this draws two triplets.' },
 ]
 
 const page42: BookPage = {
