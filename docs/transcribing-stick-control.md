@@ -1,7 +1,7 @@
 # Transcribing Stick Control
 
 Notes from reading fourteen photographed pages of George Lawrence Stone's *Stick
-Control* into `packages/stick-control/src/stickControl.ts`, written down because the next
+Control* into `packages/stick-control/src/pages/`, written down because the next
 fourteen will hit the same things.
 
 The section is now 459 exercises over 21 pages. The photographs stop where they
@@ -39,7 +39,7 @@ sixteenths) and never anything else, so the count *is* the rhythm and
 The photographs are HEIC, which the Read tool will not open. macOS ships `sips`:
 
 ```bash
-sips -s format png assets/.../page-14.HEIC --out /tmp/page-14.png
+sips -s format png packages/stick-control/sources/.../page-14.HEIC --out /tmp/page-14.png
 ```
 
 They are hand-held landscape, so rotate 90° clockwise (`Image.rotate(-90,

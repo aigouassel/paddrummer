@@ -7,7 +7,7 @@ generalises to the next clip.
 
 Source: a YouTube short, "How to play drum grooves on a practice pad" by
 Grahame O'Shea, 720×1280 at 30 fps. It lives in `packages/videos/sources/grahame-oshea-pad-grooves/`, which is
-gitignored for the same reason the book photographs are: someone else's work,
+gitignored — unlike the book photographs, which are committed: someone else's work,
 kept locally as a transcription source.
 
 ---

@@ -7,9 +7,10 @@ there too, mirroring this one.
 
 ## What is here, and what is not
 
-The clip itself is **not committed**, on the same terms as the book
-photographs: someone else's video, kept for personal practice. Neither are the
-things derived from it — the frame cache, the slowed-down audio, the yt-dlp
+The clip itself is **not committed** — unlike the photographed book pages,
+which are. It is someone else's video, kept for personal practice, and larger
+and more regenerable than a set of stills. Neither are the things derived from
+it — the frame cache, the slowed-down audio, the yt-dlp
 metadata. All of it is regenerable:
 
 ```bash

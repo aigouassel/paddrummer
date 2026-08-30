@@ -142,9 +142,15 @@ outstanding should someone want to check them against a rudiment book.
 Exercises transcribed from photographs of George Lawrence Stone's *Stick
 Control* — 459 of them over the 21 pages that were photographed, kept a
 book-page at a time with the printed numbering carried through so any one can
-be checked against the source. The page images live in `assets/` and are
-gitignored: the patterns are transcribed for personal practice, the scans are
-not redistributed.
+be checked against the source. The page images live in
+`packages/stick-control/sources/`, alongside the script that crops them, and
+are committed with the transcription: a clone can put an exercise beside the
+page it was read from without first tracking down the book. They are
+photographs of a copyrighted work, kept for personal practice.
+
+The transcription is one file per section of the book — `src/pages/` — over a
+shared model (`book.ts`), sticking helpers (`sticking.ts`) and the cell shape
+that pages 24–26, 32 and 33 have in common (`cells.ts`).
 
 | Pages | Section |
 | ----- | ------- |
@@ -193,6 +199,8 @@ on trust:
 page-12.HEIC · right column, line 1   ->   ./my.show-source.py 12 right 1
 page-34.HEIC · full width, line 8     ->   ./my.show-source.py 34 left 8 --single
 ```
+
+The script lives in `packages/stick-control/`, beside the pages it reads.
 
 A page is usually twelve staff lines in two columns, but not always. Some rule
 a line across the middle, which takes a line's worth of space without holding a
@@ -243,10 +251,12 @@ The grid says where to look; the sheet is what you look at.
 ```
 
 Both scripts live in `packages/videos/`, beside the material they produced.
-The clips are gitignored on the same terms as the book photographs, by an
-allowlist rather than a list of extensions — anything dropped into a source
-folder is ignored unless it is named as safe, because the cost of getting that
-wrong is publishing someone else's video.
+The clips are gitignored — unlike the book photographs, which are committed —
+by an allowlist rather than a list of extensions: anything dropped into a video
+source folder is ignored unless named as safe. The asymmetry is deliberate. A
+36MB set of stills is worth carrying for the traceability it buys; a video is
+larger, regenerable from its URL, and `grid.json` already preserves what was
+read off it.
 
 What came out of the first clip is in `packages/videos/src/grahame-oshea-pad-grooves/`: a kit groove
 voiced on one pad, butt of the stick for the bass drum and shoulder for the

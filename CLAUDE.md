@@ -110,9 +110,14 @@ consequences worth remembering:
 
 ## Stick Control transcriptions
 
-`packages/stick-control/src/stickControl.ts` holds ~460 exercises read off photographs of George
-Lawrence Stone's *Stick Control*. The photographs are in `assets/` and are
-**gitignored** — a copyrighted book, transcribed for personal practice.
+`packages/stick-control/src/` holds ~460 exercises read off photographs of
+George Lawrence Stone's *Stick Control*, one file per section of the book under
+`pages/` over a shared `book.ts` (types and page geometry), `sticking.ts` (the
+tail generators) and `cells.ts` (the shape pages 24–26, 32 and 33 share).
+The photographs are in `packages/stick-control/sources/` and **are committed**,
+by decision, so any exercise can be checked against its page from a clone
+alone. They are a copyrighted book, photographed for personal practice — the
+video clips, by contrast, stay gitignored.
 
 The governing rule: **nothing is inferred from a rule that was not first
 verified against the page.** Most exercises are a pattern plus a tail that
