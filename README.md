@@ -186,3 +186,34 @@ account for every line slot down the page.
 records how the reading was actually done — how to get a photograph on screen,
 how to tell a rule from an exception, and what each of them costs when it is
 wrong.
+
+## Transcribing from video
+
+A second source of material, and a different problem: a stroke in a video has
+to be read twice, once for when it falls and once for which hand played it.
+
+`my.video-grid.py` does the first half from the audio. It deliberately refuses
+to answer the question "how many notes are there?" — onset strength is a
+continuum, so that count is only ever the threshold you picked, and `--sweep`
+shows you as much. Instead it fits one period and phase to the steadiest
+passage and reports, slot by slot, which sixteenths were struck:
+
+```
+./my.video-grid.py assets/videos/clip.mp4 --sweep
+./my.video-grid.py assets/videos/clip.mp4 --fit 8.3 22.0 --shift 2
+```
+
+`my.video-frames.py` does the second half, which nothing automatic managed:
+it caches every frame once — so frame *n* is time *n*/fps exactly, which
+seeking cannot promise — and tiles chosen frames into a labelled contact sheet.
+The grid says where to look; the sheet is what you look at.
+
+```
+./my.video-frames.py assets/videos/clip.mp4 --crop 0,384,720,1088 --extract
+./my.video-frames.py assets/videos/clip.mp4 --at 3.861 4.261 --window 2
+```
+
+Videos live in `assets/`, gitignored alongside the book photographs.
+
+[`docs/transcribing-video.md`](docs/transcribing-video.md) records the method,
+the four automated approaches that failed and why, and what is still open.
