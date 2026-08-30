@@ -125,9 +125,10 @@ export function StickControlPage() {
                           the page rather than taken on trust. */}
                       <span className="provenance">
                         {item.at.file.split('/').pop()} ·{' '}
-                        {bookPage.columns > 1
+                        {bookPage.columns > 1 && (item.at.columns ?? 1) === 1
                           ? `${item.at.column === 0 ? 'left' : 'right'} column, `
                           : ''}
+                        {bookPage.columns > 1 && (item.at.columns ?? 1) > 1 ? 'full width, ' : ''}
                         line {item.at.row + 1}
                         {item.at.rows > 1 ? `–${item.at.row + item.at.rows}` : ''}
                       </span>
