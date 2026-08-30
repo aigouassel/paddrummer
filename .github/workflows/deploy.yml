@@ -1,0 +1,68 @@
+# Builds the app and publishes it to GitHub Pages.
+#
+# The checks run in the same job as the build rather than in one of their own:
+# they are the reason the deploy is allowed to happen, and splitting them would
+# mean either running the install twice or letting a red build ship anyway.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  # So a deploy can be re-run without an empty commit.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time. A run that has already been superseded by a newer push
+# is cancelled rather than racing it to the same URL.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Before setup-node, so that its yarn cache lookup has a yarn to ask.
+      # Yarn 4 itself is vendored in .yarn/releases; corepack only shims it.
+      - run: corepack enable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      # --immutable fails the build if yarn.lock does not already satisfy the
+      # manifests, rather than quietly resolving something else than local.
+      - run: yarn install --immutable
+
+      - run: yarn typecheck
+      - run: yarn test
+
+      - uses: actions/configure-pages@v5
+        id: pages
+
+      # A project site lives under /<repo>/, so the bundle has to be built
+      # knowing that. configure-pages reports the path it will be served at.
+      - run: yarn build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
