@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!--
+    A snare drum, front on. Drawn for 16px first: the head is a flat ellipse,
+    the shell a plain block, and the tension cables three strokes rather than
+    the eight a real drum has — at favicon size any more is a smudge.
+  -->
+  <g fill="none" stroke="#b4451f" stroke-width="2.4" stroke-linecap="round">
+    <!-- Shell -->
+    <path d="M4 11v10c0 2 5.4 3.6 12 3.6s12-1.6 12-3.6V11" />
+    <!-- Tension cables -->
+    <path d="M10 12.4v10M16 13v10.6M22 12.4v10" stroke-width="1.6" />
+  </g>
+  <!-- Head, filled so the drum reads as solid at small sizes -->
+  <ellipse cx="16" cy="11" rx="12" ry="4.4" fill="#b4451f" />
+  <!-- A stick, laid across the head -->
+  <path d="M7 5.5 25 16" stroke="#b4451f" stroke-width="2.6" stroke-linecap="round" fill="none" />
+</svg>
