@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import {
   CATEGORIES,
   CATEGORY_NAMES,
@@ -13,8 +13,9 @@ import { useElementWidth } from './useElementWidth'
 import { usePractice } from './usePractice'
 import { Transport } from './Transport'
 import { Score, MIN_SCORE_WIDTH } from './Score'
+import { minimumScoreWidth } from '@paddrummer/notation'
+import { useDeclareMusicWidth } from './MusicWidth'
 import { ScorePanel } from './ScorePanel'
-import { InputPanel } from './InputPanel'
 
 /**
  * Built once at module load, not per render.
@@ -37,12 +38,12 @@ export function RudimentsPage() {
   const piece = PIECES.get(id)!
 
   const {
-    isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
-    input, micStatus, micError, sensitivity, getMeter,
+    isPlaying, bpm, mode, input,
     activeStroke, report,
-    toggle, calibrate, setTempo, defaultBpm, resetTempo, setMetronome, clearLatency,
-    useKeyboard, useMicrophone, setSensitivity,
+    toggle, setTempo, defaultBpm, resetTempo,
   } = usePractice(piece.phrase, piece.bpm)
+
+  useDeclareMusicWidth(useMemo(() => minimumScoreWidth(piece.phrase), [piece.phrase]))
 
   const calibrating = mode === 'calibrating'
   const stageRef = useRef<HTMLDivElement>(null)
@@ -116,29 +117,14 @@ export function RudimentsPage() {
             Play along with the click. {CALIBRATION_BEATS} strikes measures the delay between
             what you hear and what the app sees, so your timing is scored fairly.
           </p>
-        ) : (
-          <ScorePanel report={report} showSticking={input === 'keyboard'} />
-        )}
+        ) : null}
       </main>
 
       <aside className="col col-right">
-        <InputPanel
-          input={input}
-          micStatus={micStatus}
-          micError={micError}
-          sensitivity={sensitivity}
-          getMeter={getMeter}
-          onUseKeyboard={useKeyboard}
-          onUseMicrophone={useMicrophone}
-          onSensitivity={setSensitivity}
-          metronome={metronome}
-          onMetronome={setMetronome}
-          calibrating={calibrating}
-          calibrationTaps={calibrationTaps}
-          onCalibrate={calibrate}
-          latencyMs={latencyMs}
-          onClearLatency={clearLatency}
-        />
+        <div className="panel-stack">
+          <p className="eyebrow">Your timing</p>
+          <ScorePanel report={report} showSticking={input === 'keyboard'} />
+        </div>
       </aside>
     </>
   )

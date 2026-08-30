@@ -15,6 +15,7 @@
     "vexflow": "^5.0.0"
   },
   "devDependencies": {
-    "@paddrummer/stick-control": "workspace:^"
+    "@paddrummer/stick-control": "workspace:^",
+    "@paddrummer/videos": "workspace:^"
   }
 }

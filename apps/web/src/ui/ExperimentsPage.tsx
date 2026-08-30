@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   GROOVE_SECTIONS,
   PAD_GROOVE,
@@ -10,9 +10,11 @@ import { toNumber } from "@paddrummer/core/fraction";
 import { usePractice } from "./usePractice";
 import { useSpacebarToggle } from "./useSpacebarToggle";
 import { useElementWidth } from "./useElementWidth";
-import { Score, MIN_SCORE_WIDTH } from "./Score"
+import { Score, MIN_SCORE_WIDTH } from "./Score";
+import { minimumScoreWidth } from "@paddrummer/notation";
+import { useDeclareMusicWidth } from "./MusicWidth";
 import { TempoControl } from "./TempoControl";
-import { InputPanel } from "./InputPanel";
+import { ClipPanel } from "./ClipPanel";
 import { ScorePanel } from "./ScorePanel";
 
 /**
@@ -33,6 +35,21 @@ const GROUPS: readonly ExperimentGroup[] = [
   { id: "video", label: "Transcribed from video", pieces: [PAD_GROOVE] },
 ];
 
+/**
+ * The host a link points at, shown on the link itself.
+ *
+ * An external link should say where it goes before you click it, and this page
+ * is otherwise scrupulous about naming its sources. Guarded because a bad URL
+ * in the data should cost a vague label, not the page.
+ */
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "the source";
+  }
+}
+
 const BY_ID = new Map(
   GROUPS.flatMap((group) => group.pieces.map((piece) => [piece.id, piece])),
 );
@@ -41,33 +58,26 @@ export function ExperimentsPage() {
   const [id, setId] = useState(PAD_GROOVE.id);
   const piece = BY_ID.get(id)!;
 
+  // What the chart cannot be squeezed below, so the shell can stop the panel
+  // being dragged over it.
+  useDeclareMusicWidth(
+    useMemo(() => minimumScoreWidth(piece.phrase), [piece.phrase]),
+  );
+
   const columnRef = useRef<HTMLDivElement>(null);
   const width = useElementWidth(columnRef, MIN_SCORE_WIDTH);
 
   const {
     isPlaying,
     bpm,
-    metronome,
     mode,
-    latencyMs,
-    calibrationTaps,
     input,
-    micStatus,
-    micError,
-    sensitivity,
-    getMeter,
     activeStroke,
     report,
     toggle,
-    calibrate,
     setTempo,
     defaultBpm,
     resetTempo,
-    setMetronome,
-    clearLatency,
-    useKeyboard,
-    useMicrophone,
-    setSensitivity,
   } = usePractice(piece.phrase, piece.bpm);
 
   const calibrating = mode === "calibrating";
@@ -115,16 +125,23 @@ export function ExperimentsPage() {
             </p>
             <h2>{piece.name}</h2>
             <p className="note">{piece.note}</p>
-            {/* Provenance, for the same reason a book exercise carries its page
-                and staff line: a transcription you cannot check is a claim. */}
-            <p className="note">
-              Read from “{piece.at.title}”, {piece.at.from.toFixed(1)}–
-              {piece.at.to.toFixed(1)}s. The grid it was measured against is, in{" "}
-              <code>
-                packages/videos/sources/{piece.at.file.split("/")[0]}/grid.json
-              </code>
-              .
-            </p>
+            {/* Offered rather than embedded: the clip is someone else's, it
+                lives on their site, and watching it is a detour from the page
+                rather than part of it. New tab, so the chart you were reading
+                is still here when you come back. */}
+            {piece.at.url ? (
+              <p className="note">
+                <a
+                  className="source-link"
+                  href={piece.at.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  title={piece.at.url}
+                >
+                  Watch it on {hostOf(piece.at.url)} ↗
+                </a>
+              </p>
+            ) : null}
           </header>
 
           <Score
@@ -182,23 +199,15 @@ export function ExperimentsPage() {
 
       <aside className="col col-right">
         <div className="panel-stack">
-          <InputPanel
-            input={input}
-            micStatus={micStatus}
-            micError={micError}
-            sensitivity={sensitivity}
-            getMeter={getMeter}
-            onUseKeyboard={useKeyboard}
-            onUseMicrophone={useMicrophone}
-            onSensitivity={setSensitivity}
-            metronome={metronome}
-            onMetronome={setMetronome}
-            calibrating={calibrating}
-            calibrationTaps={calibrationTaps}
-            onCalibrate={calibrate}
-            latencyMs={latencyMs}
-            onClearLatency={clearLatency}
+          {/* The clip first: it is what you came to compare the chart against,
+              and it is the thing you are done with once you start playing. */}
+          <ClipPanel
+            file={piece.at.file}
+            title={piece.at.title}
+            from={piece.at.from}
+            isPlaying={isPlaying}
           />
+
           <section className="panel-stack">
             <p className="eyebrow">Your timing</p>
             {input === "microphone" ? (

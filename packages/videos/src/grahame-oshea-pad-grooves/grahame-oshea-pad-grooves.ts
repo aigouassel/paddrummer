@@ -60,6 +60,15 @@ export type VideoRef = {
   /** Seconds into the clip where the transcribed passage starts. */
   from: number;
   to: number;
+  /**
+   * Where the clip can be watched, when it is published somewhere.
+   *
+   * Optional, and deliberately not part of the evidence: a clip filmed on a
+   * phone has no link, and a published one can be taken down. What makes a
+   * transcription checkable is `grid.json`, which is committed. This is only
+   * so you can go and look.
+   */
+  url?: string;
 };
 
 /**
@@ -105,6 +114,7 @@ const SOURCE = {
   file: "grahame-oshea-pad-grooves/d_sp7QIH3Oo.mp4",
   title: "How to play drum grooves on a practice pad",
   author: "Grahame O'Shea",
+  url: "https://youtube.com/shorts/d_sp7QIH3Oo",
 } as const;
 
 const PART: Record<Hand, StickPart> = { L: "butt", R: "shoulder" };

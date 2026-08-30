@@ -6,8 +6,9 @@ import { useSpacebarToggle } from './useSpacebarToggle'
 import { useElementWidth } from './useElementWidth'
 import { useFollowActive } from './useFollowActive'
 import { Score, MIN_SCORE_WIDTH } from './Score'
+import { minimumScoreWidth } from '@paddrummer/notation'
+import { useDeclareMusicWidth } from './MusicWidth'
 import { TempoControl } from './TempoControl'
-import { InputPanel } from './InputPanel'
 import { ScorePanel } from './ScorePanel'
 
 /** These exercises are short; drawn any larger they waste the column. */
@@ -34,12 +35,19 @@ export function StickControlPage() {
 
   const phrase = useMemo(() => exercise.phrase, [exercise])
 
+  // The whole page is on screen at once, so the widest exercise on it governs,
+  // not the one armed for playing.
+  useDeclareMusicWidth(
+    useMemo(
+      () => Math.max(...bookPage.exercises.map((e) => minimumScoreWidth(e.phrase, SHEET_ZOOM))),
+      [bookPage],
+    ),
+  )
+
   const {
-    isPlaying, bpm, metronome, mode, latencyMs, calibrationTaps,
-    input, micStatus, micError, sensitivity, getMeter,
+    isPlaying, bpm, mode, input,
     activeStroke, report,
-    toggle, calibrate, setTempo, defaultBpm, resetTempo, setMetronome, clearLatency,
-    useKeyboard, useMicrophone, setSensitivity,
+    toggle, setTempo, defaultBpm, resetTempo,
   } = usePractice(phrase)
 
   const calibrating = mode === 'calibrating'
@@ -162,23 +170,6 @@ export function StickControlPage() {
 
       <aside className="col col-right">
         <div className="panel-stack">
-          <InputPanel
-            input={input}
-            micStatus={micStatus}
-            micError={micError}
-            sensitivity={sensitivity}
-            getMeter={getMeter}
-            onUseKeyboard={useKeyboard}
-            onUseMicrophone={useMicrophone}
-            onSensitivity={setSensitivity}
-            metronome={metronome}
-            onMetronome={setMetronome}
-            calibrating={calibrating}
-            calibrationTaps={calibrationTaps}
-            onCalibrate={calibrate}
-            latencyMs={latencyMs}
-            onClearLatency={clearLatency}
-          />
           <section className="panel-stack">
             <p className="eyebrow">Your timing</p>
             <ScorePanel report={report} showSticking={input === 'keyboard'} />

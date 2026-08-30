@@ -129,6 +129,17 @@ describe('pad grooves', () => {
     expect(PAD_GROOVE.at.file).toMatch(/\.(mp4|mov|webm)$/)
     expect(PAD_GROOVE.bpm).toBeGreaterThan(0)
   })
+
+  it('links to the same clip it was transcribed from', () => {
+    // A link is a convenience rather than evidence, but a link to the wrong
+    // video is worse than none: it invites you to check a transcription
+    // against something that is not its source. The file is named for the
+    // clip, so the two have to agree.
+    const url = PAD_GROOVE.at.url!
+    expect(url).toMatch(/^https:\/\//)
+    const id = PAD_GROOVE.at.file.split('/').pop()!.replace(/\.[^.]+$/, '')
+    expect(url).toContain(id)
+  })
 })
 
 /**

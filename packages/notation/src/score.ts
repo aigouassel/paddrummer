@@ -27,6 +27,20 @@ import { type TupletRatio, toVexDuration } from './vexDuration'
 import { FIXED_WIDTH, PADDING, WIDTH_PER_METER, planScore } from './systems'
 
 /**
+ * The narrowest a phrase can be engraved without cramping the notes.
+ *
+ * Asking the planner for a zero-width column is what makes this exact rather
+ * than estimated: every bar wraps to a row of its own, so what comes back is
+ * the width of the single most demanding bar — which is the true floor, since
+ * no amount of wrapping makes a bar narrower than its own contents.
+ *
+ * Callers use it to avoid taking room the music cannot give up.
+ */
+export function minimumScoreWidth(phrase: Phrase, maxZoom: number = MAX_ZOOM): number {
+  return planScore(phrase, 0, maxZoom).logicalWidth
+}
+
+/**
  * Draws a phrase as snare notation.
  *
  * Snare drum has no pitch, so a rudiment sits on one line of a percussion

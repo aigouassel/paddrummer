@@ -43,13 +43,55 @@ body {
      repertoire is the pad-groove triple-stroke roll, twenty-four sextuplet
      slots, which wants ~900px. Below that the chart scrolls sideways, and a
      chart you have to scroll is not a chart. Panels reflow; music does not. */
-  grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr) minmax(12rem, 14rem);
+  /*
+   * The panel takes the width it was dragged to, but never more than the music
+   * can spare. Expressed here rather than in the drag handler so it holds at
+   * all times — on a window resize, and when a stored width meets a page whose
+   * music needs more room than the page it was set on.
+   *
+   * `--music-min` is what the current page says its narrowest acceptable
+   * engraving is; the inner max() keeps the ceiling above the floor when the
+   * window is too small for either.
+   */
+  --right-effective: clamp(
+    180px,
+    var(--right-column, 14rem),
+    max(180px, calc(100vw - 14rem - 2rem - var(--music-min, 0px)))
+  );
+  grid-template-columns: minmax(12rem, 14rem) minmax(0, 1fr) var(--right-effective);
   grid-template-rows: auto minmax(0, 1fr);
   grid-template-areas:
     'top top top'
     'left center right';
   height: 100dvh;
+  /* The resizer is placed against this box rather than against the viewport,
+     so it starts below the topbar without being told how tall that is. */
+  position: relative;
 }
+
+/*
+ * The draggable boundary between the music and the panel.
+ *
+ * Six pixels wide and transparent: it needs to be grabbable, and a visible
+ * six-pixel bar between two columns that already have a border would read as
+ * a third thing rather than as the seam between two.
+ */
+.col-resizer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: var(--right-effective);
+  width: 6px;
+  margin-right: -3px;
+  cursor: col-resize;
+  /* Above both columns' own scrolling content, or the grab misses near a
+     scrollbar. */
+  z-index: 2;
+  touch-action: none;
+}
+
+.col-resizer:hover,
+.col-resizer:focus-visible { background: var(--accent); outline: none; }
 
 .topbar {
   grid-area: top;
@@ -65,9 +107,10 @@ body {
 
 .nav { display: flex; gap: 0.25rem; margin-left: 0.75rem; }
 
-/* Pushed to the far end, away from the pages it does not choose between. */
+/* Pushed to the far end, away from the pages they do not choose between. */
+.topbar-actions { display: flex; gap: 0.4rem; margin-left: auto; }
+
 .panel-toggle {
-  margin-left: auto;
   padding: 0.35rem 0.7rem;
   border: 1px solid var(--line);
   border-radius: 0.4rem;
@@ -112,9 +155,10 @@ body {
 /* Collapsed by shrinking the track rather than hiding the column in place: the
    centre only gains the room if the grid stops reserving it. Not quite to
    nothing, though — a gutter is left so the music has a margin to end against
-   instead of running into the window edge. The left column takes a share of
-   the freed width too, since the lists are what it was short of. */
-.layout.is-panel-hidden { grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) 1.5rem; }
+   instead of running into the window edge, and a wide one, because with the
+   panel gone there is no border there to stop the eye. The left column takes a
+   share of the freed width too, since the lists are what it was short of. */
+.layout.is-panel-hidden { grid-template-columns: minmax(12rem, 16rem) minmax(0, 1fr) 3.5rem; }
 .layout.is-panel-hidden .col-right { display: none; }
 
 .col-left { grid-area: left; border-right: 1px solid var(--line); }
@@ -243,6 +287,20 @@ select {
 }
 
 .tempo-reset:hover { color: var(--fg); border-color: var(--accent); }
+
+/* An offer, not a banner: it sits with the provenance it belongs to and looks
+   like the other small controls rather than competing with the music. */
+.source-link {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 0.35rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+
+.source-link:hover { color: var(--fg); border-color: var(--accent); }
 .tempo-value { color: var(--muted); font-size: 0.85rem; text-align: center; }
 .tempo-value strong { color: var(--fg); font-variant-numeric: tabular-nums; }
 
@@ -639,3 +697,59 @@ select {
   .worksheet { overflow: visible; padding: 1.5rem; }
   .sheet-transport { position: sticky; bottom: 0; }
 }
+
+
+/* ── Setup dialog ───────────────────────────────────────────────── */
+
+/*
+ * A native <dialog>, so focus trapping, Escape and the backdrop come from the
+ * browser. Only the look is ours.
+ */
+.setup-dialog {
+  width: min(26rem, calc(100vw - 3rem));
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.setup-dialog::backdrop { background: rgb(0 0 0 / 0.55); }
+
+.setup-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.setup-head h2 { margin: 0; font-size: 1.05rem; letter-spacing: -0.01em; }
+
+/* ── The clip ───────────────────────────────────────────────────── */
+
+.clip-head { display: flex; align-items: baseline; justify-content: space-between; }
+
+.clip-close {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.clip-close:hover { color: var(--fg); }
+
+/*
+ * Capped by height rather than width. The clips are phone video, so they are
+ * taller than they are wide, and letting one take its natural height would
+ * push the timing read-out out of the column entirely.
+ */
+.clip-video {
+  width: 100%;
+  max-height: 20rem;
+  border-radius: 0.5rem;
+  background: #000;
+}
+
+.clip-speed { font-size: 0.75rem; }

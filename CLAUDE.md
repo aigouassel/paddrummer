@@ -98,7 +98,10 @@ real repertoire, not fixtures), and `videos` on the other three material
 packages (to assert that nothing but a groove carries a `part`). All three are
 devDependencies, and none of them is a runtime cycle. `videos` still devDepends
 on `exercises` for that last check, which is the one thing keeping the package
-from being dead weight.
+from being dead weight. `notation` devDepends on `videos` for the same reason
+it devDepends on `stick-control`: the densest music in the app sets the layout
+floor the resizer clamps against, so the assertion that it fits belongs beside
+the code that computes it.
 
 **A `Phrase` is the currency.** One line for a rudiment, two for hand
 independence, where two strokes can fall on the same beat. Rests are modelled

@@ -7,6 +7,8 @@ import {
   type Phrase,
 } from '@paddrummer/core/phrase'
 import { BOOK_PAGES_BY_NUMBER } from '@paddrummer/stick-control'
+import { PAD_GROOVE } from '@paddrummer/videos'
+import { minimumScoreWidth } from './score'
 import { FIXED_WIDTH, PADDING, planScore, splitBars } from './systems'
 
 /**
@@ -183,5 +185,31 @@ describe('planScore with sections', () => {
   it('refuses a section that does not fall on a barline', () => {
     const phrase: Phrase = { ...quarters(2), sections: [{ at: [3, 1], label: 'nowhere' }] }
     expect(() => planScore(phrase, WIDE, 1.5)).toThrow(/does not start on a barline/)
+  })
+})
+
+describe('minimumScoreWidth', () => {
+  /**
+   * The floor the layout is built around.
+   *
+   * The centre column may be squeezed to this and no further — it is what the
+   * panel resizer clamps against — so it is a number the app depends on rather
+   * than an implementation detail. The densest thing in the repertoire is the
+   * pad-groove triple-stroke roll, twenty-four sextuplet slots in one bar.
+   */
+  it('draws the densest chart in the app within 700px', () => {
+    expect(minimumScoreWidth(PAD_GROOVE.phrase)).toBeLessThanOrEqual(700)
+  })
+
+  it('charges a single line more per note than two voices', () => {
+    // A single line carries a sticking letter under every note and a two-voice
+    // phrase carries none, so the same number of notes needs different room.
+    // Getting this wrong is what made the chart demand 900px.
+    const oneLine = phraseOfSticking('R R R R', 'q', FOUR_FOUR)
+    const twoLines = phraseOfLines(FOUR_FOUR, [
+      line('R', 'x x x x', 'q'),
+      line('L', 'x x x x', 'q'),
+    ])
+    expect(minimumScoreWidth(oneLine)).toBeGreaterThan(minimumScoreWidth(twoLines))
   })
 })

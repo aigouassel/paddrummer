@@ -19,8 +19,21 @@ import { type Phrase, barBeats, isRest } from '@paddrummer/core/phrase'
  * happened to work because nothing was longer than two bars.
  */
 
-/** Room one note needs before the engraving starts to look cramped. */
+/**
+ * Room one note needs before the engraving starts to look cramped.
+ *
+ * Two figures, because a note's width is set by what is drawn with it rather
+ * than by the notehead. A single-line phrase is a rudiment or a book exercise
+ * and carries a sticking letter under every note, which is wider than the note
+ * itself; a two-voice phrase names the hands once at the head of each part and
+ * puts nothing under the notes at all.
+ *
+ * Charging both the same is what made the twenty-bar pad groove demand 900px:
+ * twenty-four sextuplets in a bar, each reserving room for a letter it does
+ * not have.
+ */
 export const WIDTH_PER_NOTE = 34
+export const WIDTH_PER_NOTE_PLAIN = 24
 /** Extra room per grace note: an ornament is drawn left of its main note. */
 export const WIDTH_PER_GRACE = 16
 /** Clef and the formatter's own left margin, once per system. */
@@ -110,7 +123,8 @@ function measure(phrase: Phrase, slices: readonly BarSlice[]): number {
   })
 
   // Distinct positions, not events: two hands landing together share a column.
-  return (starts.size || 1) * WIDTH_PER_NOTE + graces * WIDTH_PER_GRACE
+  const perNote = phrase.lines.length > 1 ? WIDTH_PER_NOTE_PLAIN : WIDTH_PER_NOTE
+  return (starts.size || 1) * perNote + graces * WIDTH_PER_GRACE
 }
 
 /**
