@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { PAD_GROOVES, PAD_GROOVES_BY_ID } from './grahame-oshea-pad-grooves'
+import {
+  GROOVE_SECTIONS,
+  GROOVE_SECTIONS_BY_ID,
+  PAD_GROOVE,
+  playedTimes,
+} from './grahame-oshea-pad-grooves'
 import { barBeats, isRest, placedStrokes } from '@paddrummer/core/phrase'
 import { toNumber } from '@paddrummer/core/fraction'
 import { RUDIMENTS } from '@paddrummer/rudiments'
@@ -7,7 +12,7 @@ import { BOOK_PAGES } from '@paddrummer/stick-control'
 import { STUDIES } from '@paddrummer/exercises/studies'
 
 describe('pad grooves', () => {
-  it.each(PAD_GROOVES)('$id fills a whole number of bars', (groove) => {
+  it.each(GROOVE_SECTIONS)('$id fills a whole number of bars', (groove) => {
     // The same arithmetic that guards the book transcriptions. A misread
     // rhythm cannot fill its metre, so this fails loudly where a misread
     // sticking would not.
@@ -17,16 +22,16 @@ describe('pad grooves', () => {
     expect(total).toBeGreaterThan(0)
   })
 
-  it.each(PAD_GROOVES)('$id says which part of the stick sounds every note', (groove) => {
+  it('says which part of the stick sounds every note of the chart', () => {
     // A piece that distinguishes voices has to do so everywhere: a stroke with
     // no part would be read as "not modelled", which would be a lie here.
-    for (const { stroke } of placedStrokes(groove.phrase)) {
-      expect(stroke.part, `${groove.id} has a stroke with no stick part`).toBeDefined()
+    for (const { stroke } of placedStrokes(PAD_GROOVE.phrase)) {
+      expect(stroke.part).toBeDefined()
     }
   })
 
   it('keeps the two voices on their own lines', () => {
-    const groove = PAD_GROOVES_BY_ID.get('pad-groove-quarters')!
+    const groove = GROOVE_SECTIONS_BY_ID.get('pad-groove-quarters')!
     const [snare, bass] = groove.phrase.lines
     expect(snare!.hand).toBe('R')
     expect(bass!.hand).toBe('L')
@@ -45,7 +50,7 @@ describe('pad grooves', () => {
    * repeat eight beats later.
    */
   it('places the strokes where the frames put them', () => {
-    const groove = PAD_GROOVES_BY_ID.get('pad-groove-quarters')!
+    const groove = GROOVE_SECTIONS_BY_ID.get('pad-groove-quarters')!
     const at = placedStrokes(groove.phrase).map((placed) => ({
       beat: toNumber(placed.atBeat),
       part: placed.stroke.part,
@@ -61,20 +66,20 @@ describe('pad grooves', () => {
   it('says how much of each piece was actually seen', () => {
     // A piece whose sticking is conventional rather than observed has to admit
     // it where a reader will meet it, not only in a doc.
-    for (const groove of PAD_GROOVES) {
+    for (const groove of GROOVE_SECTIONS) {
       if (groove.reading === 'rhythm') {
         expect(groove.note, `${groove.id} must explain its sticking`).toMatch(
           /sticking|lead hand|conventional/i,
         )
       }
     }
-    expect(PAD_GROOVES.filter((g) => g.reading === 'frames')).toHaveLength(1)
+    expect(GROOVE_SECTIONS.filter((g) => g.reading === 'frames')).toHaveLength(1)
   })
 
   it('covers the clip end to end without gaps or overlaps', () => {
     // The point of "transcribe it fully": every second of playing is in one
     // piece or another, in order.
-    const spans = [...PAD_GROOVES].sort((a, b) => a.at.from - b.at.from)
+    const spans = [...GROOVE_SECTIONS].sort((a, b) => a.at.from - b.at.from)
     expect(spans[0]!.at.from).toBeLessThan(2.0)
     expect(spans[spans.length - 1]!.at.to).toBeGreaterThan(33)
     spans.forEach((groove, i) => {
@@ -84,7 +89,7 @@ describe('pad grooves', () => {
 
   it('subdivides each section the way the recording measures', () => {
     const beatsOf = (id: string) => {
-      const phrase = PAD_GROOVES_BY_ID.get(id)!.phrase
+      const phrase = GROOVE_SECTIONS_BY_ID.get(id)!.phrase
       return { beats: toNumber(phrase.beats), strokes: placedStrokes(phrase).length }
     }
     // Two bars of quarters, then the same filled twice over.
@@ -99,7 +104,7 @@ describe('pad grooves', () => {
 
   it('alternates hands through the sixteenth fills', () => {
     for (const id of ['pad-groove-sixteenths', 'pad-groove-sixteenths-switched']) {
-      const hands = placedStrokes(PAD_GROOVES_BY_ID.get(id)!.phrase)
+      const hands = placedStrokes(GROOVE_SECTIONS_BY_ID.get(id)!.phrase)
         .sort((a, b) => toNumber(a.atBeat) - toNumber(b.atBeat))
         .map((placed) => placed.stroke.hand)
       hands.forEach((hand, i) => {
@@ -109,7 +114,7 @@ describe('pad grooves', () => {
   })
 
   it('groups the roll three strokes to a hand', () => {
-    const hands = placedStrokes(PAD_GROOVES_BY_ID.get('pad-triple-stroke-roll')!.phrase)
+    const hands = placedStrokes(GROOVE_SECTIONS_BY_ID.get('pad-triple-stroke-roll')!.phrase)
       .sort((a, b) => toNumber(a.atBeat) - toNumber(b.atBeat))
       .map((placed) => placed.stroke.hand)
       .join('')
@@ -117,11 +122,60 @@ describe('pad grooves', () => {
   })
 
   it('records where it was read from', () => {
-    for (const groove of PAD_GROOVES) {
+    for (const groove of GROOVE_SECTIONS) {
       expect(groove.at.file).toMatch(/\.(mp4|mov|webm)$/)
       expect(groove.at.to).toBeGreaterThan(groove.at.from)
-      expect(groove.bpm).toBeGreaterThan(0)
     }
+    expect(PAD_GROOVE.at.file).toMatch(/\.(mp4|mov|webm)$/)
+    expect(PAD_GROOVE.bpm).toBeGreaterThan(0)
+  })
+})
+
+/**
+ * The chart against the grid map.
+ *
+ * `grid.json`'s README reads the clip as bars 2–5 the quarter-note groove, 6–9
+ * filled with eighths, 10–15 with sixteenths, 16–17 the triple stroke roll and
+ * 18–21 the sixteenths with the hands switched. Writing those bars out is only
+ * honest if the written music actually fits them, which is what this checks:
+ * the arithmetic has to close, or a repeat count was invented.
+ */
+describe('the chart matches the measured grid', () => {
+  it.each(GROOVE_SECTIONS)('$id repeats a whole number of times', (section) => {
+    const times = playedTimes(section)
+    expect(Number.isInteger(times), `${section.id} plays ${times} times`).toBe(true)
+    expect(times).toBeGreaterThan(0)
+  })
+
+  it('tiles bars 2 to 21 with no gap and no overlap', () => {
+    const spans = [...GROOVE_SECTIONS].sort((a, b) => a.bars[0] - b.bars[0])
+    expect(spans[0]!.bars[0]).toBe(2)
+    expect(spans[spans.length - 1]!.bars[1]).toBe(21)
+    spans.forEach((section, i) => {
+      if (i > 0) expect(section.bars[0]).toBe(spans[i - 1]!.bars[1] + 1)
+    })
+  })
+
+  it('is twenty bars long', () => {
+    const bar = toNumber(barBeats(PAD_GROOVE.phrase.meter!))
+    expect(toNumber(PAD_GROOVE.phrase.beats) / bar).toBe(20)
+  })
+
+  it('lasts as long as the passage it was read from', () => {
+    // 20 bars of 4/4 at 150bpm is 32.0s; the clip's transcribed passage runs
+    // 1.86 to 33.84. If these ever drift apart, a section is the wrong length.
+    const seconds = (toNumber(PAD_GROOVE.phrase.beats) * 60) / PAD_GROOVE.bpm
+    expect(seconds).toBeCloseTo(PAD_GROOVE.at.to - PAD_GROOVE.at.from, 1)
+  })
+
+  it('marks each section over the bar it opens', () => {
+    expect(PAD_GROOVE.phrase.sections?.map((s) => [toNumber(s.at), s.label])).toEqual([
+      [0, 'the groove'],
+      [16, 'fill in gaps with 8ths'],
+      [32, 'or…. 16ths'],
+      [56, 'triple stroke roll'],
+      [64, 'switch hands'],
+    ])
   })
 })
 

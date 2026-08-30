@@ -1,4 +1,4 @@
-import { PAD_GROOVES } from '@paddrummer/videos'
+import { PAD_GROOVE } from '@paddrummer/videos'
 import type { RudimentCategory } from '@paddrummer/core/pattern'
 import { type Piece, pieceOfRudiment } from '@paddrummer/core/piece'
 import { RUDIMENTS } from '@paddrummer/rudiments'
@@ -71,7 +71,7 @@ const studySection = (id: string, label: string, kind: string, want: (pieceId: s
 const grooveSection: CatalogueSection = {
   id: 'pad-grooves',
   label: 'VII. Pad Grooves',
-  entries: PAD_GROOVES.map((groove) => ({
+  entries: [PAD_GROOVE].map((groove) => ({
     piece: groove,
     kind: `Pad groove · played at ${groove.bpm} bpm`,
     detail: [

@@ -1,6 +1,16 @@
 import { EIGHTH, QUARTER, SIXTEENTH, SIXTEENTH_TRIPLET, type Duration } from '@paddrummer/core/duration'
+import { toNumber } from '@paddrummer/core/fraction'
 import type { Hand, StickPart, Stroke } from '@paddrummer/core/pattern'
-import { type Meter, type PhraseLine, isRest, line, phraseOfLines } from '@paddrummer/core/phrase'
+import {
+  type Meter,
+  type Phrase,
+  type PhraseLine,
+  barBeats,
+  isRest,
+  line,
+  phraseOfLines,
+  phraseOfParts,
+} from '@paddrummer/core/phrase'
 import type { Piece } from '@paddrummer/core/piece'
 
 /**
@@ -22,6 +32,12 @@ import type { Piece } from '@paddrummer/core/piece'
  * Two lines, bass below and snare above, as a drum-kit chart would. Nothing
  * here is ever two strokes at once — a pad cannot be — so the lines are a way
  * of showing the voicing, not independence.
+ *
+ * The clip is transcribed as one chart rather than as five exercises, because
+ * that is what it is: a single continuous performance in which the player
+ * changes what he is doing four times and says so as he goes. Each section
+ * below writes the bar he repeats; the number of times he repeats it is read
+ * off the grid map in `grid.json`, and the bars are then written out in full.
  *
  * How the reading was done, and where it ran out, is in
  * docs/transcribing-video.md.
@@ -51,11 +67,32 @@ export type VideoRef = {
  */
 export type Reading = 'frames' | 'rhythm'
 
+/**
+ * One stretch of the clip: the bar he repeats, and how long he repeats it.
+ *
+ * `bars` is the range in the grid map's own numbering — the map's bar 1 is the
+ * count-in before the groove enters at 1.863s — so a section points back at
+ * the evidence the way a Stick Control exercise points at a staff line. How
+ * many times the written bar is played is that span divided by its length,
+ * which is checked rather than declared.
+ */
+export type GrooveSection = {
+  id: string
+  /** What he calls it, printed over the bar the section opens. */
+  label: string
+  phrase: Phrase
+  /** First and last bar of the grid map, inclusive. */
+  bars: readonly [first: number, last: number]
+  at: VideoRef
+  reading: Reading
+  note: string
+}
+
 export type PadGroove = Piece & {
   at: VideoRef
   /** Beats per minute the clip was played at. */
   bpm: number
-  reading: Reading
+  sections: readonly GrooveSection[]
 }
 
 const SOURCE = {
@@ -97,10 +134,10 @@ const FOUR_FOUR: Meter = [4, 4]
  * here as rests, but the pad is empty in every frame at those moments, so
  * those are the previous stroke ringing rather than notes.
  */
-const QUARTERS: PadGroove = {
+const QUARTERS: GrooveSection = {
   id: 'pad-groove-quarters',
-  name: 'Pad Groove — quarters',
-  bpm: 150,
+  label: 'the groove',
+  bars: [2, 5],
   reading: 'frames',
   at: { ...SOURCE, from: 1.86, to: 8.26 },
   phrase: groove(FOUR_FOUR, QUARTER,
@@ -119,10 +156,10 @@ const QUARTERS: PadGroove = {
  * off-eighths at 8.57, 8.77 and 9.17s while the left kept the butt stroke at
  * 9.40s — so the bass keeps the groove and the right hand plays around it.
  */
-const EIGHTHS: PadGroove = {
+const EIGHTHS: GrooveSection = {
   id: 'pad-groove-eighths',
-  name: 'Pad Groove — filled with 8ths',
-  bpm: 150,
+  label: 'fill in gaps with 8ths',
+  bars: [6, 9],
   reading: 'rhythm',
   at: { ...SOURCE, from: 8.26, to: 14.65 },
   phrase: groove(FOUR_FOUR, EIGHTH,
@@ -147,10 +184,10 @@ const EIGHTHS: PadGroove = {
  * play sixteenths at 150bpm for five bars, so they must alternate; which hand
  * starts, and what happens across the rest, the video does not show.
  */
-const SIXTEENTHS: PadGroove = {
+const SIXTEENTHS: GrooveSection = {
   id: 'pad-groove-sixteenths',
-  name: 'Pad Groove — filled with 16ths',
-  bpm: 150,
+  label: 'or…. 16ths',
+  bars: [10, 15],
   reading: 'rhythm',
   at: { ...SOURCE, from: 14.65, to: 24.24 },
   phrase: groove(FOUR_FOUR, SIXTEENTH,
@@ -171,10 +208,10 @@ const SIXTEENTHS: PadGroove = {
  * about half the strokes register at all, which is what a roll does — the
  * second and third of each triple are bounces.
  */
-const ROLL: PadGroove = {
+const ROLL: GrooveSection = {
   id: 'pad-triple-stroke-roll',
-  name: 'Pad Groove — triple stroke roll',
-  bpm: 150,
+  label: 'triple stroke roll',
+  bars: [16, 17],
   reading: 'rhythm',
   at: { ...SOURCE, from: 24.24, to: 27.44 },
   phrase: groove(FOUR_FOUR, SIXTEENTH_TRIPLET,
@@ -192,10 +229,10 @@ const ROLL: PadGroove = {
  * silence after the beat-3 backbeat included, and the caption says what
  * changed. Mirroring is therefore the whole of the difference.
  */
-const SWITCHED: PadGroove = {
+const SWITCHED: GrooveSection = {
   id: 'pad-groove-sixteenths-switched',
-  name: 'Pad Groove — 16ths, hands switched',
-  bpm: 150,
+  label: 'switch hands',
+  bars: [18, 21],
   reading: 'rhythm',
   at: { ...SOURCE, from: 27.44, to: 33.84 },
   phrase: groove(FOUR_FOUR, SIXTEENTH,
@@ -206,10 +243,51 @@ const SWITCHED: PadGroove = {
     'the beats. Same caveat on the sticking as the section it mirrors.',
 }
 
-export const PAD_GROOVES: readonly PadGroove[] = [
+export const GROOVE_SECTIONS: readonly GrooveSection[] = [
   QUARTERS, EIGHTHS, SIXTEENTHS, ROLL, SWITCHED,
 ]
 
-export const PAD_GROOVES_BY_ID: ReadonlyMap<string, PadGroove> = new Map(
-  PAD_GROOVES.map((g) => [g.id, g]),
+export const GROOVE_SECTIONS_BY_ID: ReadonlyMap<string, GrooveSection> = new Map(
+  GROOVE_SECTIONS.map((section) => [section.id, section]),
 )
+
+/**
+ * How many times a section's written bar is played.
+ *
+ * Derived from the grid map rather than counted by ear or declared by hand: a
+ * section spanning bars 10–15 whose written phrase is one bar long was played
+ * six times. If a bar range and a phrase length ever disagree about being a
+ * whole number of passes, that is a transcription error and the test says so.
+ */
+export function playedTimes(section: GrooveSection): number {
+  const [first, last] = section.bars
+  const written = toNumber(section.phrase.beats) / toNumber(barBeats(section.phrase.meter!))
+  return (last - first + 1) / written
+}
+
+/**
+ * The clip as one chart: twenty bars, bars 2 to 21 of the grid map.
+ *
+ * Played straight through it is the video, in order, at length — which is the
+ * only form in which it can be read the way it was played. The captions become
+ * the section marks over the bar each one opens.
+ */
+export const PAD_GROOVE: PadGroove = {
+  id: 'pad-grooves',
+  name: 'Pad Grooves',
+  bpm: 150,
+  at: { ...SOURCE, from: 1.86, to: 33.84 },
+  sections: GROOVE_SECTIONS,
+  phrase: phraseOfParts(
+    GROOVE_SECTIONS.map((section) => ({
+      phrase: section.phrase,
+      label: section.label,
+      repeat: playedTimes(section),
+    })),
+  ),
+  note:
+    'The whole clip, written out at the length it was played. Butt of the ' +
+    'stick for the bass drum, shoulder of the other for the snare — the left ' +
+    'hand holds the inverted stick throughout, so left is always the bass ' +
+    'voice and right always the snare.',
+}
