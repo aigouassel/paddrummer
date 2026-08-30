@@ -5,53 +5,84 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-yarn dev                  # Vite dev server on :5173
-yarn test                 # vitest run — the whole suite
+yarn dev                  # Vite dev server on :5173 (delegates to @paddrummer/web)
+yarn test                 # every workspace in one vitest run
 yarn test:watch
-yarn typecheck            # tsc --noEmit
+yarn typecheck            # tsc --noEmit in each workspace, in parallel
 yarn build                # typecheck, then vite build
 
-yarn vitest run src/domain/stickControl.test.ts        # one file
-yarn vitest run -t 'fills a whole number of bars'      # one test by name
+yarn workspace @paddrummer/stick-control test          # one package
+yarn vitest run -t 'fills a whole number of bars'      # one test by name, anywhere
 ```
 
-Vitest is configured with `environment: 'node'` and `include: ['src/**/*.test.ts']`
-— note the `.ts`, so a `.tsx` test would be silently skipped. There is no jsdom:
-VexFlow's `StaveNote`, `Tuplet` and `Voice` all construct headlessly, which is
-enough to test the notation layer's arithmetic without rendering.
+Vitest runs as **projects**, one per workspace: the root `vitest.config.ts`
+names them, and each brings its own config, so a package is tested identically
+whether reached from the root or from `yarn workspace <name> test`. All of them
+use `environment: 'node'` and `include: ['src/**/*.test.ts']` — note the `.ts`,
+so a `.tsx` test would be silently skipped. There is no jsdom: VexFlow's
+`StaveNote`, `Tuplet` and `Voice` all construct headlessly, which is enough to
+test the notation layer's arithmetic without rendering.
 
 Yarn 4 is pinned per-project via `.yarnrc.yml`; use `yarn`, not `npm`.
 
 ## Architecture
 
+A Yarn workspace monorepo: seven packages and one app.
+
 ```
-src/
-  domain/     Pure TypeScript. The rudiments, studies, exercises and book
-              transcriptions as data, plus phrase expansion and hit scoring.
-  audio/      AudioContext, lookahead scheduler, click voice.
-  input/      HitSource port: KeyboardHitSource | MicHitSource.
-  notation/   Adapter from a domain Phrase to a VexFlow stave.
-  storage/    Empty. The README describes a ProgressStore here; nothing is
-              written yet, and nothing imports it.
-  ui/         React components, one file per page plus the shared panels.
+packages/
+  core/           The model. Fraction, duration, pattern, phrase, piece,
+                  timeline, scoring. Depends on nothing.
+  rudiments/      The 40 PAS rudiments as data.
+  exercises/      Studies and the guided routines built from them — the
+                  material the app authored, as opposed to the three below.
+  stick-control/  Stone's book, transcribed from photographs.
+  videos/         Transcriptions read off video.
+  catalogue/      The picker model. The one place that knows all the material.
+  notation/       Adapter from a Phrase to a VexFlow stave.
+apps/
+  web/            audio/ (AudioContext, lookahead scheduler, click voice),
+                  input/ (HitSource: keyboard | microphone, and the onset
+                  worklet), ui/ (one file per page plus the shared panels).
 ```
+
+The material packages split by **provenance**: `rudiments`, `stick-control` and
+`videos` are sources outside the app; `exercises` is what the app wrote itself.
+That is the axis to keep when adding material — a new book is a new package, a
+new routine goes in `exercises`.
+
+`audio` and `input` stay inside the app on purpose. They are mutually
+recursive — the engine owns the input switching, and the microphone source
+needs the worklet — and a package boundary between them would be a cycle rather
+than a boundary.
 
 Three pages routed on the URL hash: **Practice**, **Exercises**, **Stick
 Control**. They share one audio engine, so calibration and input choice survive
 navigation. They divide by *interaction model*, not by subject — Practice is one
 piece at your tempo, Exercises a routine that drives itself, Stick Control
 browsing a source — which is the axis to keep when adding material.
-`domain/catalogue.ts` is Practice's side of that: everything playable on its
+`@paddrummer/catalogue` is Practice's side of that: everything playable on its
 own, grouped, each entry carrying what a picker needs so the component does not
 branch on kind.
 
 Four load-bearing decisions, each of which is easy to break by accident:
 
-**`domain/` never imports a browser API.** Rendering, playback and scoring are
-three readers of one data structure, so a correctly-modelled rudiment is
-automatically playable, drawable and scorable. Keep it that way — including in
-tests: a test *about* notation belongs in `notation/`, even when its subject
-matter is domain data.
+**No package under `packages/` may import a browser API**, except `notation`.
+Rendering, playback and scoring are three readers of one data structure, so a
+correctly-modelled rudiment is automatically playable, drawable and scorable.
+This is no longer a convention: `tsconfig.base.json` sets `lib: ["ES2022"]` with
+no DOM, so `window`, `document` and `AudioContext` are *type errors* in six of
+the seven packages. `notation` adds DOM back because VexFlow's own types
+reference SVG and canvas elements.
+
+The rule extends to tests: a test *about* notation belongs in `notation`, even
+when its subject matter is domain data — which is why `@paddrummer/notation`
+devDepends on `@paddrummer/stick-control`, to assert every duration the book
+uses has a glyph. Two other test-only edges exist for the same reason:
+`core` devDepends on `rudiments` (the model's hard cases are checked against
+real repertoire, not fixtures), and `videos` on the other three material
+packages (to assert that nothing but a groove carries a `part`). All three are
+devDependencies, and none of them is a runtime cycle.
 
 **A `Phrase` is the currency.** One line for a rudiment, two for hand
 independence, where two strokes can fall on the same beat. Rests are modelled
@@ -66,7 +97,7 @@ a pure function of a timestamp and testable with a fake clock. React subscribes
 to the engine for display only.
 
 **Durations are lengths of time, not glyphs.** A 16th-note triplet is `1/6` of a
-beat. `notation/vexDuration.ts` is the only place that knows how one length
+beat. `packages/notation/src/vexDuration.ts` is the only place that knows how one length
 splits into the three facts VexFlow needs — glyph, dot count, tuplet ratio. Two
 consequences worth remembering:
 
@@ -79,7 +110,7 @@ consequences worth remembering:
 
 ## Stick Control transcriptions
 
-`src/domain/stickControl.ts` holds ~460 exercises read off photographs of George
+`packages/stick-control/src/stickControl.ts` holds ~460 exercises read off photographs of George
 Lawrence Stone's *Stick Control*. The photographs are in `assets/` and are
 **gitignored** — a copyrighted book, transcribed for personal practice.
 

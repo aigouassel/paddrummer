@@ -17,18 +17,33 @@ metronome while the app listens to your pad through the microphone.
 
 ## Architecture
 
+A Yarn workspace monorepo — seven packages and one app:
+
 ```
-src/
-  domain/     Pure TypeScript. No browser APIs. The rudiments, studies and
-              exercises as data, phrase expansion, and hit scoring. A Phrase is
-              the currency: one line for a rudiment, two for hand
-              independence. Fully unit-testable.
-  audio/      AudioContext, lookahead scheduler, click voice.
-  input/      HitSource port: KeyboardHitSource | MicHitSource.
-  notation/   Adapter from a domain Phrase to a VexFlow stave, one voice or two.
-  storage/    ProgressStore interface + localStorage implementation.
-  ui/         React components, one file per page plus the shared panels.
+packages/core           Fraction, duration, pattern, phrase, piece, timeline,
+                        scoring. A Phrase is the currency: one line for a
+                        rudiment, two for hand independence. Depends on nothing.
+packages/rudiments      The 40 PAS rudiments as data.
+packages/exercises      Studies, and the guided routines built from them.
+packages/stick-control  Stone's book, transcribed from photographs.
+packages/videos         Transcriptions read off video.
+packages/catalogue      The picker model; the one place that knows all of it.
+packages/notation       Adapter from a Phrase to a VexFlow stave, one voice or two.
+apps/web                audio/ (scheduler, click voice), input/ (keyboard or
+                        microphone), ui/ (one file per page plus the panels).
 ```
+
+The material packages divide by **provenance**: rudiments, stick-control and
+videos come from outside the app, exercises is what the app wrote itself. So a
+new book is a new package and a new routine is not.
+
+`audio` and `input` stay inside the app deliberately. They are mutually
+recursive — the engine owns the input switching, the microphone source needs
+the onset worklet — so a boundary between them would be a cycle, not a
+boundary.
+
+`ProgressStore` (roadmap 6b) is unwritten. Its interface belongs in `core`, its
+localStorage implementation in the app, since `localStorage` is a browser API.
 
 Three pages, routed on the URL hash: **Practice** (any one piece, your tempo),
 **Exercises** (guided routines that set the rudiment and tempo and advance
@@ -60,9 +75,13 @@ struck. Timing is still scored; the keyboard is what checks the hands.
 
 Two rules hold this together:
 
-1. **`domain/` never imports a browser API.** Rendering, playback and scoring
-   are three readers of one data structure, so a correctly-modelled rudiment is
-   automatically playable, drawable and scorable.
+1. **No package imports a browser API**, `notation` excepted. Rendering,
+   playback and scoring are three readers of one data structure, so a
+   correctly-modelled rudiment is automatically playable, drawable and
+   scorable. The workspace split makes this mechanical rather than advisory:
+   `tsconfig.base.json` omits the DOM lib, so `window` and `AudioContext` are
+   type errors in six of the seven packages. `notation` adds it back because
+   VexFlow's types reference SVG elements.
 2. **The audio engine is not React state.** React re-renders when the browser
    feels like it; the scheduler runs on its own timer against the audio clock.
    React subscribes to the engine for display only.
@@ -72,8 +91,10 @@ Two rules hold this together:
 ```bash
 yarn dev        # dev server
 yarn build      # production build
-yarn test       # unit tests (domain layer)
-yarn typecheck  # tsc --noEmit
+yarn test       # every workspace, one vitest run
+yarn typecheck  # tsc --noEmit in each workspace
+
+yarn workspace @paddrummer/stick-control test   # just one package
 ```
 
 ## Roadmap
@@ -111,7 +132,7 @@ has been measured.
 
 Thirteen of the forty stickings were never confirmed against a primary source —
 the uncertainty is concentrated in the drag family, and Vic Firth publishes its
-notation only as images. They carry `verified: false` in `src/domain/rudiments.ts`
+notation only as images. They carry `verified: false` in `packages/rudiments/src/rudiments.ts`
 and are listed by the `UNVERIFIED` export. By decision the app treats them as
 correct and does not surface the flag; the flag remains as the record of what is
 outstanding should someone want to check them against a rudiment book.
@@ -215,7 +236,7 @@ The grid says where to look; the sheet is what you look at.
 
 Videos live in `assets/`, gitignored alongside the book photographs.
 
-What came out of the first clip is in `src/domain/padGrooves.ts`: a kit groove
+What came out of the first clip is in `packages/videos/src/padGrooves.ts`: a kit groove
 voiced on one pad, butt of the stick for the bass drum and shoulder for the
 snare. That is the first material where a hand does not tell you what the note
 is meant to be, so `Stroke` gained an optional `part`. Absent means the piece

@@ -166,7 +166,7 @@ omit it, and no rudiment, study or book exercise may carry it.
 
 ## 9. What was transcribed, and how much of it was seen
 
-All five sections, end to end, in `src/domain/padGrooves.ts`. They tile the
+All five sections, end to end, in `packages/videos/src/padGrooves.ts`. They tile the
 clip without gaps: 1.9–8.3s, 8.3–14.7, 14.7–24.2, 24.2–27.4, 27.4–33.8.
 
 | Piece | Figure | Reading |

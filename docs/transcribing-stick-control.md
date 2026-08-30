@@ -1,7 +1,7 @@
 # Transcribing Stick Control
 
 Notes from reading fourteen photographed pages of George Lawrence Stone's *Stick
-Control* into `src/domain/stickControl.ts`, written down because the next
+Control* into `packages/stick-control/src/stickControl.ts`, written down because the next
 fourteen will hit the same things.
 
 The section is now 459 exercises over 21 pages. The photographs stop where they
