@@ -143,6 +143,34 @@ where a rule could plausibly have been guessed wrong.
 See `docs/transcribing-stick-control.md` for how the transcription was done and
 what it cost to get right.
 
+## Video transcriptions
+
+`packages/videos` holds both the transcriptions and the tools that produced
+them. One folder per clip under `sources/`, holding the video, its frame cache
+and `grid.json`.
+
+**Only `grid.json` and the folder's README are committed.** The clips are
+copyrighted, so `.gitignore` covers `packages/videos/sources/**` as an
+**allowlist** — everything is ignored unless named as safe. Add a new kind of
+artefact there and it is ignored by default; that is deliberate, and the
+negation to un-ignore something should be made only for text you have read.
+
+`grid.json` is the video's answer to `SourceRef`: the fitted grid (unit, phase,
+bpm) and the onset peak at every sixteenth slot across the clip. It is what
+makes a transcription checkable by someone holding only the repository — no
+video, no librosa, no ear — which matters more here than for the book, because
+a clip cannot be re-photographed from a shelf.
+
+`my.video-grid.py` reads rhythm off the audio and deliberately refuses to
+answer "how many notes are there?" — onset strength is a continuum, and
+`--sweep` shows the absence of a plateau rather than hiding it. `my.video-frames.py`
+tiles chosen frames into a contact sheet, which is how hands are read; nothing
+automatic managed that. Both take a clip path, so they are shared by every
+source folder rather than copied into each.
+
+See `docs/transcribing-video.md` for the method and the four automated
+approaches that failed.
+
 ## Conventions
 
 - **`my.` prefix** marks files that are personal rather than part of the

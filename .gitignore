@@ -9,8 +9,18 @@ dist/
 .pnp.*
 
 # Photographs of copyrighted practice books, used as a transcription source.
-# The transcribed patterns live in src/domain/stickControl.ts; the page images
+# The transcribed patterns live in packages/stick-control/src/stickControl.ts; the page images
 # themselves stay out of version control.
 assets/
+
+# Video source material, on the same terms as the book scans: the clips are
+# copyrighted and transcribed for personal practice, so none of them ship.
+# Written as an allowlist rather than a list of extensions to exclude —
+# default-deny means a format nobody thought of is out too, and the cost of
+# getting this wrong is publishing someone else's video.
+packages/videos/sources/**
+!packages/videos/sources/**/
+!packages/videos/sources/**/grid.json
+!packages/videos/sources/**/*.md
 
 !CLAUDE.md

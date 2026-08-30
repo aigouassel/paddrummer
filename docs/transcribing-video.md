@@ -6,7 +6,7 @@ The point of writing it now is that the *method* is what took the time, and it
 generalises to the next clip.
 
 Source: a YouTube short, "How to play drum grooves on a practice pad" by
-Grahame O'Shea, 720×1280 at 30 fps. It lives in `assets/videos/`, which is
+Grahame O'Shea, 720×1280 at 30 fps. It lives in `packages/videos/sources/grahame-oshea-pad-grooves/`, which is
 gitignored for the same reason the book photographs are: someone else's work,
 kept locally as a transcription source.
 
@@ -166,7 +166,7 @@ omit it, and no rudiment, study or book exercise may carry it.
 
 ## 9. What was transcribed, and how much of it was seen
 
-All five sections, end to end, in `packages/videos/src/padGrooves.ts`. They tile the
+All five sections, end to end, in `packages/videos/src/grahame-oshea-pad-grooves/`. They tile the
 clip without gaps: 1.9–8.3s, 8.3–14.7, 14.7–24.2, 24.2–27.4, 27.4–33.8.
 
 | Piece | Figure | Reading |

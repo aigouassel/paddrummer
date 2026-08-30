@@ -18,9 +18,9 @@ tiles them. Every frame carries its own timestamp, so a reading can always be
 traced back to the frame it came from -- the same reason the Stick Control
 exercises carry a page and a staff line.
 
-    ./my.video-frames.py assets/videos/clip.mp4 --extract
-    ./my.video-frames.py assets/videos/clip.mp4 --frames 114-118,150-154 --out bar3.jpg
-    ./my.video-frames.py assets/videos/clip.mp4 --at 3.861 4.261 4.661 5.060 --window 2
+    ./my.video-frames.py sources/<clip>/clip.mp4 --extract
+    ./my.video-frames.py sources/<clip>/clip.mp4 --frames 114-118,150-154 --out bar3.jpg
+    ./my.video-frames.py sources/<clip>/clip.mp4 --at 3.861 4.261 4.661 5.060 --window 2
 
 Frames are cached on first use because seeking per frame is both slow and
 imprecise: `-ss` lands on the wrong side of a keyframe often enough to matter

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PAD_GROOVES, PAD_GROOVES_BY_ID } from './padGrooves'
+import { PAD_GROOVES, PAD_GROOVES_BY_ID } from './grahame-oshea-pad-grooves'
 import { barBeats, isRest, placedStrokes } from '@paddrummer/core/phrase'
 import { toNumber } from '@paddrummer/core/fraction'
 import { RUDIMENTS } from '@paddrummer/rudiments'

@@ -23,8 +23,8 @@ steadiest passage, then read every slot's onset energy. Slots the player leaves
 empty come out at zero, and the map below prints as bars of sixteenths you can
 compare against what you hear.
 
-    ./my.video-grid.py assets/videos/clip.mp4 --fit 8.3 15.0
-    ./my.video-grid.py assets/videos/clip.mp4 --fit 8.3 15.0 --shift 2 --json grid.json
+    ./my.video-grid.py sources/<clip>/clip.mp4 --fit 8.3 15.0
+    ./my.video-grid.py sources/<clip>/clip.mp4 --fit 8.3 15.0 --shift 2 --json grid.json
 
 Personal tooling, like my.show-source.py: a checking aid, not app code.
 """

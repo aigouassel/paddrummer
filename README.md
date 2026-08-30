@@ -177,8 +177,9 @@ have been guessed wrong.
 
 Two of these pages need note lengths that notation has no glyph for — eight
 sixteenths in the space of six on pages 25 and 26, five eighths in the space of
-four on page 42. They are plain fractions in the domain, and `notation/` knows
-to draw them as an ordinary note with a number over the group. A test asserts
+four on page 42. They are plain fractions in `@paddrummer/core`, and
+`@paddrummer/notation` knows to draw them as an ordinary note with a number
+over the group. A test asserts
 that VexFlow makes a bar of them exactly as long as the domain says it is,
 because the two do that arithmetic independently and can disagree in silence.
 
@@ -213,6 +214,13 @@ wrong.
 A second source of material, and a different problem: a stroke in a video has
 to be read twice, once for when it falls and once for which hand played it.
 
+Everything for a clip lives in one folder under `packages/videos/sources/`:
+the video, the frame cache, and `grid.json` — the fitted grid and the onset
+peak at every sixteenth slot. Only the last of those is committed, which is the
+point: the clip is copyrighted and the cache is 60MB, but the evidence a
+transcription was read off is 19KB and makes the claims checkable by someone
+holding only this repository.
+
 `my.video-grid.py` does the first half from the audio. It deliberately refuses
 to answer the question "how many notes are there?" — onset strength is a
 continuum, so that count is only ever the threshold you picked, and `--sweep`
@@ -220,8 +228,8 @@ shows you as much. Instead it fits one period and phase to the steadiest
 passage and reports, slot by slot, which sixteenths were struck:
 
 ```
-./my.video-grid.py assets/videos/clip.mp4 --sweep
-./my.video-grid.py assets/videos/clip.mp4 --fit 8.3 22.0 --shift 2
+./my.video-grid.py sources/<clip>/clip.mp4 --sweep
+./my.video-grid.py sources/<clip>/clip.mp4 --fit 8.3 22.0 --shift 2 --json grid.json
 ```
 
 `my.video-frames.py` does the second half, which nothing automatic managed:
@@ -230,13 +238,17 @@ seeking cannot promise — and tiles chosen frames into a labelled contact sheet
 The grid says where to look; the sheet is what you look at.
 
 ```
-./my.video-frames.py assets/videos/clip.mp4 --crop 0,384,720,1088 --extract
-./my.video-frames.py assets/videos/clip.mp4 --at 3.861 4.261 --window 2
+./my.video-frames.py sources/<clip>/clip.mp4 --crop 0,384,720,1088 --extract
+./my.video-frames.py sources/<clip>/clip.mp4 --at 3.861 4.261 --window 2
 ```
 
-Videos live in `assets/`, gitignored alongside the book photographs.
+Both scripts live in `packages/videos/`, beside the material they produced.
+The clips are gitignored on the same terms as the book photographs, by an
+allowlist rather than a list of extensions — anything dropped into a source
+folder is ignored unless it is named as safe, because the cost of getting that
+wrong is publishing someone else's video.
 
-What came out of the first clip is in `packages/videos/src/padGrooves.ts`: a kit groove
+What came out of the first clip is in `packages/videos/src/grahame-oshea-pad-grooves/`: a kit groove
 voiced on one pad, butt of the stick for the bass drum and shoulder for the
 snare. That is the first material where a hand does not tell you what the note
 is meant to be, so `Stroke` gained an optional `part`. Absent means the piece
@@ -252,7 +264,7 @@ in its own note, so the distinction reaches the app rather than staying in a
 doc.
 
 It plays on the **Practice** page, which now offers any piece rather than only
-a rudiment — `domain/catalogue.ts` groups the 40 rudiments, the 18 studies and
+a rudiment — `@paddrummer/catalogue` groups the 40 rudiments, the 18 studies and
 the grooves into one picker. That also closed a gap: the studies existed but
 could only be met inside a routine, at the routine's tempo.
 

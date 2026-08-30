@@ -29,7 +29,9 @@ import type { Piece } from '@paddrummer/core/piece'
 
 /** Where a transcribed piece came from, so it can be checked rather than trusted. */
 export type VideoRef = {
-  /** The clip, under assets/videos/ (gitignored, like the book photographs). */
+  /** The clip, relative to `packages/videos/sources/`. Not committed — the
+   * folder's README says how to fetch it, and `grid.json` beside it carries
+   * the measured grid so a transcription stays checkable without it. */
   file: string
   title: string
   author: string
@@ -57,7 +59,7 @@ export type PadGroove = Piece & {
 }
 
 const SOURCE = {
-  file: 'd_sp7QIH3Oo.mp4',
+  file: 'grahame-oshea-pad-grooves/d_sp7QIH3Oo.mp4',
   title: 'How to play drum grooves on a practice pad',
   author: "Grahame O'Shea",
 } as const
