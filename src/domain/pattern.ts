@@ -4,6 +4,22 @@ import { type Duration, SIXTEENTH, isFraction, toBeats } from './duration'
 /** Which hand strikes the drum. */
 export type Hand = 'R' | 'L'
 
+/**
+ * Which part of the stick sounds the note.
+ *
+ * Only material that voices more than one drum on a single surface needs this.
+ * A pad groove imitates a kit by striking with the butt of an inverted stick
+ * for the bass drum and the shoulder of the other for the snare, so hand and
+ * voice come apart: in the fills both hands play the snare voice.
+ *
+ * Absent means the piece does not distinguish — which is every rudiment and
+ * every Stick Control page, where a hand is the whole story. It deliberately
+ * does not mean 'shoulder': defaulting it that way would silently assert that
+ * hundreds of transcribed snare strokes are shoulder strokes, when they are
+ * ordinary tip strokes. A piece that distinguishes sets it on every stroke.
+ */
+export type StickPart = 'shoulder' | 'butt'
+
 export const otherHand = (hand: Hand): Hand => (hand === 'R' ? 'L' : 'R')
 
 /**
@@ -30,6 +46,9 @@ export type Stroke = {
   accent?: boolean
   /** A pressed multiple-bounce stroke rather than a discrete hit (buzz roll). */
   buzz?: boolean
+  /** Which part of the stick makes the sound; absent where the piece does not
+   * distinguish. See `StickPart`. */
+  part?: StickPart
 }
 
 /** The four families of the PAS 40 International Drum Rudiments. */
