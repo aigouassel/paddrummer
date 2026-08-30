@@ -222,9 +222,13 @@ is meant to be, so `Stroke` gained an optional `part`. Absent means the piece
 does not distinguish — every rudiment and every book exercise — rather than
 meaning "shoulder", and tests hold both halves of that line.
 
-Only the opening groove is transcribed. The faster sections' rhythm is known
-but their sticking is not readable at 30 fps, and a stroke nobody can see is
-not written down.
+All five sections are transcribed, tiling the clip end to end. Each carries a
+`reading`: `frames` where every stroke was seen, `rhythm` where the rhythm and
+voicing are read but the hand assignment inside a fill is a conventional
+sticking — at 150bpm a sixteenth is three frames and the strokes are not
+separable. A test refuses to let a piece marked `rhythm` ship without saying so
+in its own note, so the distinction reaches the app rather than staying in a
+doc.
 
 It plays on the **Practice** page, which now offers any piece rather than only
 a rudiment — `domain/catalogue.ts` groups the 40 rudiments, the 18 studies and

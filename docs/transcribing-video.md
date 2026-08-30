@@ -164,40 +164,64 @@ does distinguish sets the field on *every* stroke, not only the exceptional
 ones, and a test enforces both halves of that: no stroke in this groove may
 omit it, and no rudiment, study or book exercise may carry it.
 
-## 9. What was transcribed, and what the video will not give up
+## 9. What was transcribed, and how much of it was seen
 
-**Transcribed** (`src/domain/padGrooves.ts`): the opening groove, two bars of
-quarter notes, every stroke read off a named frame and then confirmed by
-predicting the repeat eight beats later.
+All five sections, end to end, in `src/domain/padGrooves.ts`. They tile the
+clip without gaps: 1.9–8.3s, 8.3–14.7, 14.7–24.2, 24.2–27.4, 27.4–33.8.
 
-```
-        1      2      3      4
-bar 1   bass   –      snare  bass
-bar 2   –      bass   snare  –
-```
+| Piece | Figure | Reading |
+|---|---|---|
+| quarters | the groove | `frames` |
+| filled with 8ths | every remaining eighth struck | `rhythm` |
+| filled with 16ths | sixteenths, silent after the backbeat | `rhythm` |
+| triple stroke roll | sextuplets, three a hand | `rhythm` |
+| 16ths, hands switched | the same, mirrored | `rhythm` |
 
-The snare sits on beat 3 of both bars — a half-time feel — and the bass
-carries the syncopation. The audio grid also showed a soft reading on the beats
-written as rests; the pad is empty in every frame at those moments, so they are
-the previous stroke ringing rather than notes. Trusting the grid alone would
-have added five phantom strokes to two bars.
+`Reading` is a field on the piece, not a footnote, because the two halves of a
+transcription were not established the same way and a reader deserves to know
+which is which:
 
-**Not transcribed:** the sticking of the 8th, 16th, roll and switched-hands
-sections. Their *rhythm* is known — the grid map in §3 is reliable, and the
-section boundaries are certain — but which hand and which stick part plays each
-note is not readable from this footage:
+- **`frames`** — every stroke read off a named frame. Only the opening groove.
+  Each of its five strokes was seen twice, eight beats apart.
+- **`rhythm`** — the rhythm, the voicing and the section are read; which hand
+  plays each stroke inside a fill is a conventional sticking. A test refuses to
+  let a piece marked this way ship without saying so in its own note.
 
-- A 16th is 100 ms, or three frames, and the strokes are small and fast.
-- Foreshortening defeats the one cue that works in the slow section. Seen down
-  its length, a stick played tip-down looks like the short vertical stub that
-  means butt-down when the groove is slow (frames 471–491).
-- At frames 486–488 two sticks appear on the pad at once, which the two-voice
-  reading of the groove does not explain.
+What made the fills transcribable at all was not the video. Three things
+outside it converged:
 
-Written down, that would be invention. The doctrine the Stick Control pages
-run on says the tail may be generated from a rule *only once the rule has been
-verified against the source*, and here it cannot be. So the file stops.
+1. **The captions specify the figure.** "fill in gaps with 8ths", "16ths",
+   "triple stroke roll" is the author stating what he is playing. That is the
+   same gift a book's section heading is — the generator, handed over.
+2. **Onset spacing measures the subdivision.** 1.92 onsets a beat and 21 of 22
+   gaps an eighth long; 3.09 a beat fitting sixteenths; and for the roll, a
+   sixteenth-note triplet fitting better than any other division, which is what
+   three strokes a hand at one triple per eighth produces. Only about half the
+   roll's strokes register at all — the second and third of each triple are
+   bounces, so that is the roll behaving as a roll.
+3. **The grid map repeats.** Every bar of the sixteenth section leaves the two
+   sixteenths after the beat-3 backbeat silent. A figure that holds across six
+   bars is the music; a detector artefact would not be so tidy.
 
-What would finish it is not more cleverness with this clip — it is a clip shot
-from a steeper angle, or at 60 fps, where the stick does not foreshorten. Every
-format YouTube offers for this one is 30 fps.
+**One observation carried more weight than any of that.** He holds the inverted
+stick in his left hand for the whole clip and never swaps it, which is visible
+in every frame showing both hands. So hand determines stick part throughout —
+left is the bass voice, right the snare — and `voiced` derives the part rather
+than making each transcription assert it. That is a fact about this player, not
+a rule of the notation: another clip could flip a stick mid-phrase.
+
+### What the footage still will not give up
+
+Which hand plays each stroke inside the fills. A sixteenth is 100ms, three
+frames; the strokes are small; and the left hand keeps the butt stick planted
+at the pad between bass notes, so there is nothing to see travelling. Frames
+476–490 show exactly that — the butt stick resting, the right hand working,
+and no way to count either.
+
+The alternation itself is not a guess: one hand cannot play sixteenths at
+150bpm for five bars, so the hands must alternate. Which hand starts, and what
+happens across the ring-out rest, is the part that is convention.
+
+What would settle it is a steeper camera angle or 60 fps, where the stick does
+not foreshorten into the stub that means butt-down when the groove is slow.
+Every format YouTube offers for this clip is 30.
